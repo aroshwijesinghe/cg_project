@@ -177,6 +177,26 @@ void Enemy::draw() const {
         glColor3f(1.0f, 0.0f, 0.0f);
         drawRect(x, y + h/2 + 15, w * pct, 6);
     }
+
+    // Draw a small health bar for standard multi-HP enemies that have taken damage
+    if (enemyType != 3 && maxHp > 1 && hp < maxHp) {
+        float barW = w;
+        float barH = 4.0f;
+        float barY = y + h/2 + 8.0f;
+        
+        // Background (gray)
+        glColor3f(0.2f, 0.2f, 0.2f);
+        drawRect(x, barY, barW, barH);
+        
+        // Foreground (green if > 50%, red otherwise)
+        float pct = (float)hp / maxHp;
+        if (pct > 0.5f) {
+            glColor3f(0.2f, 0.9f, 0.2f); // Green
+        } else {
+            glColor3f(1.0f, 0.3f, 0.3f); // Red
+        }
+        drawRect(x - barW/2 + (barW * pct)/2, barY, barW * pct, barH);
+    }
 }
 
 void Player::update(bool left, bool right, bool up, bool down) {
@@ -226,10 +246,14 @@ void Player::draw() const {
     glColor3f(1.0f, 1.0f, 1.0f);
     drawRect(x, y + 2, 6, 6);
 
-    if (shields > 0 && hitFlashTimer <= 0) {
+    if (shields > 0) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(0.0f, 0.8f, 1.0f, 0.4f);
+        if (hitFlashTimer > 0) {
+            glColor4f(0.8f, 1.0f, 1.0f, 0.95f); // Flashing bright cyan-white
+        } else {
+            glColor4f(0.0f, 0.8f, 1.0f, 0.4f);  // Regular blue shield
+        }
         glBegin(GL_LINE_LOOP);
         for(int i = 0; i < 20; ++i) {
             float theta = i * 2.0f * 3.14159f / 20.0f;
