@@ -34,6 +34,7 @@ private:
     std::vector<Enemy> enemies;
     std::vector<Scrap> scraps;
     std::vector<Particle> particles;
+    std::vector<FloatingText> floatingTexts;
     StarField starField;
 
     bool keyLeft, keyRight, keyUp, keyDown;
@@ -43,6 +44,8 @@ private:
     void spawnEnemy();
     void spawnEnemyBullet(const Enemy& e);
     void spawnExplosion(float x, float y, float r, float g, float b);
+    void spawnMuzzleFlash(float x, float y, float r, float g, float b);
+    void spawnFloatingText(float x, float y, const std::string& text, float r, float g, float b, float vy = 1.2f);
     void checkCollisions();
     void startNextWave();
 

@@ -2,6 +2,7 @@
 #define ENTITIES_H
 
 #include <vector>
+#include <string>
 
 const int WIN_W = 800;
 const int WIN_H = 600;
@@ -57,6 +58,7 @@ struct EnemyBullet {
 struct Scrap {
     float x, y;
     float speed;
+    float angle;
     bool  alive;
 
     void update();
@@ -90,6 +92,18 @@ struct Player {
     float hitFlashTimer;
 
     void update(bool left, bool right, bool up, bool down);
+    void draw() const;
+};
+
+struct FloatingText {
+    float x, y;
+    std::string text;
+    float vx, vy;
+    float r, g, b;
+    float alpha;
+    bool alive;
+
+    void update();
     void draw() const;
 };
 
