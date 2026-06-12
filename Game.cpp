@@ -41,6 +41,7 @@ void Game::reset() {
     enemies.clear();
     scraps.clear();
     particles.clear();
+    floatingTexts.clear();
     
     player.x = WIN_W / 2.0f;
     player.y = 60.0f;
@@ -65,7 +66,15 @@ void Game::startNextWave() {
     bullets.clear();
     enemyBullets.clear();
     enemies.clear();
+    floatingTexts.clear();
     state = PLAYING;
+
+    // Spawn floating text for wave start
+    if (wave % 5 == 0) {
+        spawnFloatingText(WIN_W / 2.0f - 90.0f, WIN_H / 2.0f, "BOSS WAVE " + std::to_string(wave), 1.0f, 0.2f, 0.2f, 0.6f);
+    } else {
+        spawnFloatingText(WIN_W / 2.0f - 50.0f, WIN_H / 2.0f, "WAVE " + std::to_string(wave), 0.2f, 0.9f, 1.0f, 0.6f);
+    }
 }
 
 void Game::spawnEnemy() {
@@ -135,6 +144,33 @@ void Game::spawnExplosion(float x, float y, float r, float g, float b) {
     }
 }
 
+void Game::spawnMuzzleFlash(float x, float y, float r, float g, float b) {
+    for (int i = 0; i < 4; ++i) {
+        Particle p;
+        p.x = x; p.y = y;
+        p.vx = (rand() % 100 - 50) / 30.0f;
+        p.vy = 2.0f + (rand() % 100) / 25.0f;
+        p.r = r; p.g = g; p.b = b;
+        p.lifetime = 0.15f + (rand() % 100) / 1000.0f;
+        particles.push_back(p);
+    }
+}
+
+void Game::spawnFloatingText(float x, float y, const std::string& text, float r, float g, float b, float vy) {
+    FloatingText ft;
+    ft.x = x;
+    ft.y = y;
+    ft.text = text;
+    ft.vx = 0.0f;
+    ft.vy = vy;
+    ft.r = r;
+    ft.g = g;
+    ft.b = b;
+    ft.alpha = 1.0f;
+    ft.alive = true;
+    floatingTexts.push_back(ft);
+}
+
 void Game::update() {
     if (screenShakeTimer > 0) screenShakeTimer -= 0.016f;
     if (baseFlashTimer > 0) baseFlashTimer -= 0.016f;
@@ -173,6 +209,9 @@ void Game::update() {
                 baseFlashTimer = 0.25f;
                 screenShakeTimer = 0.22f;
 
+                // Spawn floating text at the bottom where the enemy leaked
+                spawnFloatingText(e.x, 30.0f, "BASE HIT! -" + std::to_string(dmg), 1.0f, 0.0f, 0.0f, 1.5f);
+
                 if (baseShields <= 0) {
                     state = GAME_OVER;
                 }
@@ -201,6 +240,26 @@ void Game::update() {
             if (dist < 100.0f) {
                 s.x += (dx / dist) * 3.5f;
                 s.y += (dy / dist) * 3.5f;
+                
+                // Spawn a golden particle trail when pulled by the player
+                if (rand() % 100 < 30) {
+                    Particle p = { s.x, s.y, 
+                                   (float)(rand() % 20 - 10) / 10.0f, 
+                                   (float)(rand() % 20 - 10) / 10.0f, 
+                                   1.0f, 0.85f, 0.0f, 
+                                   0.3f + (rand() % 100) / 500.0f };
+                    particles.push_back(p);
+                }
+            } else {
+                // Faint trail even when just drifting down
+                if (rand() % 100 < 8) {
+                    Particle p = { s.x, s.y, 
+                                   (float)(rand() % 10 - 5) / 10.0f, 
+                                   0.5f + (float)(rand() % 10) / 10.0f,
+                                   1.0f, 0.8f, 0.2f, 
+                                   0.2f + (rand() % 100) / 500.0f };
+                    particles.push_back(p);
+                }
             }
         }
         scraps.erase(std::remove_if(scraps.begin(), scraps.end(),
@@ -214,6 +273,12 @@ void Game::update() {
     }
     particles.erase(std::remove_if(particles.begin(), particles.end(),
         [](const Particle& p){ return p.lifetime <= 0.0f; }), particles.end());
+
+    for (auto& ft : floatingTexts) {
+        ft.update();
+    }
+    floatingTexts.erase(std::remove_if(floatingTexts.begin(), floatingTexts.end(),
+        [](const FloatingText& ft){ return !ft.alive; }), floatingTexts.end());
 
     starField.update();
 }
@@ -230,16 +295,18 @@ void Game::checkCollisions() {
 
                 if (e.hp <= 0) {
                     e.alive = false;
-                    score += (e.enemyType == 3) ? 100 : 10;
+                    int pts = (e.enemyType == 3) ? 100 : 10;
+                    score += pts;
                     spawnExplosion(e.x, e.y, 1.0f, 0.4f, 0.1f);
+                    spawnFloatingText(e.x, e.y, "+" + std::to_string(pts), 1.0f, 1.0f, 1.0f, 1.0f);
 
                     if (e.enemyType == 3) {
                         for (int i = 0; i < 6; ++i) {
-                            Scrap s = { e.x + (rand() % 40 - 20), e.y + (rand() % 40 - 20), 1.2f, true };
+                            Scrap s = { e.x + (rand() % 40 - 20), e.y + (rand() % 40 - 20), 1.2f, 0.0f, true };
                             scraps.push_back(s);
                         }
                     } else if (rand() % 100 < 55) {
-                        Scrap s = { e.x, e.y, 1.5f, true };
+                        Scrap s = { e.x, e.y, 1.5f, 0.0f, true };
                         scraps.push_back(s);
                     }
                 }
@@ -256,6 +323,8 @@ void Game::checkCollisions() {
             player.hitFlashTimer = 0.2f;
             screenShakeTimer = 0.28f;
             int dmg = (e.enemyType == 3) ? 3 : 1;
+            int prevShields = player.shields;
+            int prevHull = player.hull;
 
             if (player.shields > 0) {
                 player.shields -= dmg;
@@ -265,6 +334,18 @@ void Game::checkCollisions() {
                 }
             } else {
                 player.hull -= dmg;
+            }
+
+            // Spawn damage popups
+            if (prevShields > 0) {
+                int shieldDmg = prevShields - player.shields;
+                if (shieldDmg > 0) {
+                    spawnFloatingText(player.x, player.y + 15.0f, "SHIELD HIT! -" + std::to_string(shieldDmg), 0.0f, 0.8f, 1.0f, 1.4f);
+                }
+            }
+            if (prevHull > player.hull) {
+                int hullDmg = prevHull - player.hull;
+                spawnFloatingText(player.x, player.y + 15.0f, "HULL HIT! -" + std::to_string(hullDmg), 1.0f, 0.2f, 0.2f, 1.4f);
             }
 
             if (player.hull <= 0) {
@@ -285,8 +366,10 @@ void Game::checkCollisions() {
 
             if (player.shields > 0) {
                 player.shields--;
+                spawnFloatingText(player.x + 10.0f, player.y + 20.0f, "-1 SHIELD", 0.0f, 0.8f, 1.0f, 1.3f);
             } else {
                 player.hull--;
+                spawnFloatingText(player.x + 10.0f, player.y + 20.0f, "-1 HULL", 1.0f, 0.2f, 0.2f, 1.3f);
             }
 
             if (player.hull <= 0) {
@@ -301,6 +384,7 @@ void Game::checkCollisions() {
         if (aabb(s.x, s.y, 8, 8, player.x, player.y, player.w, player.h)) {
             s.alive = false;
             credits += 10;
+            spawnFloatingText(s.x, s.y, "+10 SCRAP", 1.0f, 0.85f, 0.0f, 1.2f);
             for (int i = 0; i < 5; ++i) {
                 Particle p = { s.x, s.y, (float)(rand()%20-10)/5.0f, (float)(rand()%20-10)/5.0f, 1.0f, 0.85f, 0.0f, 0.5f };
                 particles.push_back(p);
@@ -344,6 +428,10 @@ void Game::draw() {
 
     for (const auto& p : particles) {
         p.draw();
+    }
+
+    for (const auto& ft : floatingTexts) {
+        ft.draw();
     }
 
     if (baseFlashTimer > 0) {
@@ -704,6 +792,7 @@ void Game::handleInput(unsigned char key, bool pressed) {
                 player.shields = 2; player.maxShields = 2;
                 player.speed = 6.5f;
                 state = PLAYING;
+                spawnFloatingText(WIN_W / 2.0f - 50.0f, WIN_H / 2.0f, "WAVE 1", 0.2f, 0.9f, 1.0f, 0.6f);
             }
             else if (key == '2') {
                 reset();
@@ -712,6 +801,7 @@ void Game::handleInput(unsigned char key, bool pressed) {
                 player.shields = 4; player.maxShields = 4;
                 player.speed = 4.5f;
                 state = PLAYING;
+                spawnFloatingText(WIN_W / 2.0f - 50.0f, WIN_H / 2.0f, "WAVE 1", 0.2f, 0.9f, 1.0f, 0.6f);
             }
             else if (key == '3') {
                 reset();
@@ -720,6 +810,7 @@ void Game::handleInput(unsigned char key, bool pressed) {
                 player.shields = 1; player.maxShields = 1;
                 player.speed = 5.8f;
                 state = PLAYING;
+                spawnFloatingText(WIN_W / 2.0f - 50.0f, WIN_H / 2.0f, "WAVE 1", 0.2f, 0.9f, 1.0f, 0.6f);
             }
             else if (key == 'b' || key == 'B') {
                 state = MAIN_MENU;
@@ -764,23 +855,30 @@ void Game::handleInput(unsigned char key, bool pressed) {
                 state = PAUSED;
             }
             else if (key == ' ') {
+                float spawnY = player.y + player.h/2.0f;
                 if (player.weaponLevel == 1) {
-                    Bullet b = { player.x, player.y + player.h/2.0f, 0.0f, 9.0f, true };
+                    Bullet b = { player.x, spawnY, 0.0f, 9.0f, true };
                     bullets.push_back(b);
+                    spawnMuzzleFlash(player.x, spawnY, 0.2f, 0.9f, 1.0f);
                 }
                 else if (player.weaponLevel == 2) {
-                    Bullet b1 = { player.x - 8.0f, player.y + player.h/2.0f, 0.0f, 9.0f, true };
-                    Bullet b2 = { player.x + 8.0f, player.y + player.h/2.0f, 0.0f, 9.0f, true };
+                    Bullet b1 = { player.x - 8.0f, spawnY, 0.0f, 9.0f, true };
+                    Bullet b2 = { player.x + 8.0f, spawnY, 0.0f, 9.0f, true };
                     bullets.push_back(b1);
                     bullets.push_back(b2);
+                    spawnMuzzleFlash(player.x - 8.0f, spawnY, 0.2f, 0.9f, 1.0f);
+                    spawnMuzzleFlash(player.x + 8.0f, spawnY, 0.2f, 0.9f, 1.0f);
                 }
                 else {
-                    Bullet b1 = { player.x, player.y + player.h/2.0f, 0.0f, 9.0f, true };
-                    Bullet b2 = { player.x - 8.0f, player.y + player.h/2.0f, -2.0f, 8.5f, true };
-                    Bullet b3 = { player.x + 8.0f, player.y + player.h/2.0f, 2.0f, 8.5f, true };
+                    Bullet b1 = { player.x, spawnY, 0.0f, 9.0f, true };
+                    Bullet b2 = { player.x - 8.0f, spawnY, -2.0f, 8.5f, true };
+                    Bullet b3 = { player.x + 8.0f, spawnY, 2.0f, 8.5f, true };
                     bullets.push_back(b1);
                     bullets.push_back(b2);
                     bullets.push_back(b3);
+                    spawnMuzzleFlash(player.x, spawnY, 0.2f, 0.9f, 1.0f);
+                    spawnMuzzleFlash(player.x - 8.0f, spawnY, 0.2f, 0.9f, 1.0f);
+                    spawnMuzzleFlash(player.x + 8.0f, spawnY, 0.2f, 0.9f, 1.0f);
                 }
             }
             if (key == 'a' || key == 'A') keyLeft = true;

@@ -102,22 +102,53 @@ void EnemyBullet::draw() const {
 
 void Scrap::update() {
     y -= speed;
+    angle += 4.0f;
+    if (angle >= 360.0f) angle -= 360.0f;
     if (y < -10) {
         alive = false;
     }
 }
 
 void Scrap::draw() const {
+    // Golden glow circle behind the scrap
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+    glColor4f(1.0f, 0.7f, 0.0f, 0.15f);
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(x, y);
+    for (int i = 0; i <= 16; ++i) {
+        float theta = i * 2.0f * 3.14159f / 16.0f;
+        glVertex2f(x + cos(theta) * 12.0f, y + sin(theta) * 12.0f);
+    }
+    glEnd();
+    glDisable(GL_BLEND);
+
+    // Rotating diamond
+    glPushMatrix();
+    glTranslatef(x, y, 0.0f);
+    glRotatef(angle, 0.0f, 0.0f, 1.0f);
     glColor3f(1.0f, 0.85f, 0.0f);
     glBegin(GL_TRIANGLES);
-        glVertex2f(x, y + 4);
-        glVertex2f(x - 4, y);
-        glVertex2f(x + 4, y);
+        glVertex2f(0, 5);
+        glVertex2f(-5, 0);
+        glVertex2f(5, 0);
         
-        glVertex2f(x, y - 4);
-        glVertex2f(x - 4, y);
-        glVertex2f(x + 4, y);
+        glVertex2f(0, -5);
+        glVertex2f(-5, 0);
+        glVertex2f(5, 0);
     glEnd();
+    // Inner bright core
+    glColor3f(1.0f, 1.0f, 0.6f);
+    glBegin(GL_TRIANGLES);
+        glVertex2f(0, 3);
+        glVertex2f(-3, 0);
+        glVertex2f(3, 0);
+        
+        glVertex2f(0, -3);
+        glVertex2f(-3, 0);
+        glVertex2f(3, 0);
+    glEnd();
+    glPopMatrix();
 }
 
 void Enemy::update(float playerX) {
@@ -146,7 +177,29 @@ void Enemy::update(float playerX) {
 }
 
 void Enemy::draw() const {
+    // --- Engine thruster flame (drawn behind the enemy, pointing upward since enemies move down) ---
+    float elapsed = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+    float flicker = 1.0f + 0.25f * sin(elapsed * 15.0f + x * 0.1f);
+
     if (enemyType == 0) {
+        // Small red thruster on top
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        float fh = 10.0f * flicker;
+        glColor4f(1.0f, 0.4f, 0.0f, 0.7f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 5.0f, y + h/2);
+            glVertex2f(x + 5.0f, y + h/2);
+            glVertex2f(x, y + h/2 + fh);
+        glEnd();
+        glColor4f(1.0f, 0.8f, 0.2f, 0.5f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 3.0f, y + h/2);
+            glVertex2f(x + 3.0f, y + h/2);
+            glVertex2f(x, y + h/2 + fh * 0.6f);
+        glEnd();
+        glDisable(GL_BLEND);
+
         glColor3f(1.0f, 0.3f, 0.3f);
         drawRect(x, y, w, h);
         glColor3f(0.6f, 0.0f, 0.0f);
@@ -155,18 +208,63 @@ void Enemy::draw() const {
         drawRect(x, y, 6, 6);
     }
     else if (enemyType == 1) {
+        // Purple thruster
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        float fh = 12.0f * flicker;
+        glColor4f(0.8f, 0.2f, 1.0f, 0.6f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 4.0f, y + h/2);
+            glVertex2f(x + 4.0f, y + h/2);
+            glVertex2f(x, y + h/2 + fh);
+        glEnd();
+        glDisable(GL_BLEND);
+
         glColor3f(0.7f, 0.1f, 0.8f);
         drawTriangle(x, y, w, h);
         glColor3f(0.2f, 0.9f, 1.0f);
         drawRect(x, y - 2, 8, 8);
     }
     else if (enemyType == 2) {
+        // Orange thruster
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        float fh = 10.0f * flicker;
+        glColor4f(1.0f, 0.6f, 0.0f, 0.7f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 4.0f, y + h/2);
+            glVertex2f(x + 4.0f, y + h/2);
+            glVertex2f(x, y + h/2 + fh);
+        glEnd();
+        glDisable(GL_BLEND);
+
         glColor3f(1.0f, 0.5f, 0.0f);
         drawTriangle(x, y, w, h);
         glColor3f(1.0f, 1.0f, 0.0f);
         drawRect(x, y + 10, 4, 8);
     }
     else if (enemyType == 3) {
+        // Boss: dual large thrusters
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        float fh = 18.0f * flicker;
+        float flicker2 = 1.0f + 0.2f * sin(elapsed * 18.0f + 2.0f);
+        float fh2 = 18.0f * flicker2;
+        // Left thruster
+        glColor4f(0.3f, 0.5f, 1.0f, 0.6f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - w/2 - 10 - 6, y + h/2 - 5);
+            glVertex2f(x - w/2 - 10 + 6, y + h/2 - 5);
+            glVertex2f(x - w/2 - 10, y + h/2 - 5 + fh);
+        glEnd();
+        // Right thruster
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x + w/2 + 10 - 6, y + h/2 - 5);
+            glVertex2f(x + w/2 + 10 + 6, y + h/2 - 5);
+            glVertex2f(x + w/2 + 10, y + h/2 - 5 + fh2);
+        glEnd();
+        glDisable(GL_BLEND);
+
         glColor3f(0.4f, 0.4f, 0.45f);
         drawRect(x, y, w, h);
         glColor3f(0.25f, 0.25f, 0.3f);
@@ -176,6 +274,26 @@ void Enemy::draw() const {
         float pct = (float)hp / maxHp;
         glColor3f(1.0f, 0.0f, 0.0f);
         drawRect(x, y + h/2 + 15, w * pct, 6);
+    }
+
+    // Draw a small health bar for standard multi-HP enemies that have taken damage
+    if (enemyType != 3 && maxHp > 1 && hp < maxHp) {
+        float barW = w;
+        float barH = 4.0f;
+        float barY = y + h/2 + 8.0f;
+        
+        // Background (gray)
+        glColor3f(0.2f, 0.2f, 0.2f);
+        drawRect(x, barY, barW, barH);
+        
+        // Foreground (green if > 50%, red otherwise)
+        float pct = (float)hp / maxHp;
+        if (pct > 0.5f) {
+            glColor3f(0.2f, 0.9f, 0.2f); // Green
+        } else {
+            glColor3f(1.0f, 0.3f, 0.3f); // Red
+        }
+        drawRect(x - barW/2 + (barW * pct)/2, barY, barW * pct, barH);
     }
 }
 
@@ -196,6 +314,97 @@ void Player::update(bool left, bool right, bool up, bool down) {
 }
 
 void Player::draw() const {
+    // --- Engine thruster flame (drawn behind ship, pointing downward) ---
+    float elapsed = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+    float flicker = 1.0f + 0.2f * sin(elapsed * 20.0f);
+    float flicker2 = 1.0f + 0.2f * sin(elapsed * 22.0f + 1.5f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending for glow
+
+    if (shipType == 0) {
+        // Interceptor: single central thruster
+        float fh = 16.0f * flicker;
+        glColor4f(0.2f, 0.7f, 1.0f, 0.7f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 6.0f, y - h/2);
+            glVertex2f(x + 6.0f, y - h/2);
+            glVertex2f(x, y - h/2 - fh);
+        glEnd();
+        // Hot inner core
+        glColor4f(0.8f, 0.95f, 1.0f, 0.6f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 3.0f, y - h/2);
+            glVertex2f(x + 3.0f, y - h/2);
+            glVertex2f(x, y - h/2 - fh * 0.55f);
+        glEnd();
+    }
+    else if (shipType == 1) {
+        // Aegis Tank: dual wide thrusters
+        float fh = 14.0f * flicker;
+        float fh2v = 14.0f * flicker2;
+        // Left thruster
+        glColor4f(0.1f, 0.5f, 1.0f, 0.65f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 14 - 4, y - h/2);
+            glVertex2f(x - 14 + 4, y - h/2);
+            glVertex2f(x - 14, y - h/2 - fh);
+        glEnd();
+        // Right thruster
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x + 14 - 4, y - h/2);
+            glVertex2f(x + 14 + 4, y - h/2);
+            glVertex2f(x + 14, y - h/2 - fh2v);
+        glEnd();
+        // Inner cores
+        glColor4f(0.7f, 0.9f, 1.0f, 0.5f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 14 - 2, y - h/2);
+            glVertex2f(x - 14 + 2, y - h/2);
+            glVertex2f(x - 14, y - h/2 - fh * 0.5f);
+        glEnd();
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x + 14 - 2, y - h/2);
+            glVertex2f(x + 14 + 2, y - h/2);
+            glVertex2f(x + 14, y - h/2 - fh2v * 0.5f);
+        glEnd();
+    }
+    else {
+        // Vanguard: triple thrusters (red-orange)
+        float fh = 14.0f * flicker;
+        float fhL = 10.0f * flicker2;
+        float fhR = 10.0f * (1.0f + 0.2f * sin(elapsed * 24.0f + 3.0f));
+        // Center
+        glColor4f(1.0f, 0.4f, 0.1f, 0.7f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 5.0f, y - h/2);
+            glVertex2f(x + 5.0f, y - h/2);
+            glVertex2f(x, y - h/2 - fh);
+        glEnd();
+        // Left wing thruster
+        glColor4f(1.0f, 0.5f, 0.0f, 0.55f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 15 - 3, y - h/2 + 4);
+            glVertex2f(x - 15 + 3, y - h/2 + 4);
+            glVertex2f(x - 15, y - h/2 + 4 - fhL);
+        glEnd();
+        // Right wing thruster
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x + 15 - 3, y - h/2 + 4);
+            glVertex2f(x + 15 + 3, y - h/2 + 4);
+            glVertex2f(x + 15, y - h/2 + 4 - fhR);
+        glEnd();
+        // Center inner core
+        glColor4f(1.0f, 0.9f, 0.5f, 0.5f);
+        glBegin(GL_TRIANGLES);
+            glVertex2f(x - 2.5f, y - h/2);
+            glVertex2f(x + 2.5f, y - h/2);
+            glVertex2f(x, y - h/2 - fh * 0.5f);
+        glEnd();
+    }
+    glDisable(GL_BLEND);
+
+    // --- Ship body ---
     if (hitFlashTimer > 0) {
         glColor3f(1.0f, 0.0f, 0.0f);
     } else {
@@ -226,10 +435,14 @@ void Player::draw() const {
     glColor3f(1.0f, 1.0f, 1.0f);
     drawRect(x, y + 2, 6, 6);
 
-    if (shields > 0 && hitFlashTimer <= 0) {
+    if (shields > 0) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glColor4f(0.0f, 0.8f, 1.0f, 0.4f);
+        if (hitFlashTimer > 0) {
+            glColor4f(0.8f, 1.0f, 1.0f, 0.95f); // Flashing bright cyan-white
+        } else {
+            glColor4f(0.0f, 0.8f, 1.0f, 0.4f);  // Regular blue shield
+        }
         glBegin(GL_LINE_LOOP);
         for(int i = 0; i < 20; ++i) {
             float theta = i * 2.0f * 3.14159f / 20.0f;
@@ -238,4 +451,27 @@ void Player::draw() const {
         glEnd();
         glDisable(GL_BLEND);
     }
+}
+
+void FloatingText::update() {
+    x += vx;
+    y += vy;
+    alpha -= 0.02f; // Fade out slowly
+    if (alpha <= 0.0f) {
+        alive = false;
+    }
+}
+
+void FloatingText::draw() const {
+    if (!alive || alpha <= 0.0f) return;
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4f(r, g, b, alpha);
+    
+    // Draw the text
+    glRasterPos2f(x, y);
+    for (char c : text) {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c);
+    }
+    glDisable(GL_BLEND);
 }
