@@ -171,7 +171,12 @@ void Enemy::update(float playerX) {
         if (y > WIN_H - 150) {
             y -= speed * 0.5f;
         } else {
-            x += sin(y * 0.02f) * 2.0f;
+            // Use a time-based counter for smooth oscillation instead of sin(y)
+            moveTimer += 0.02f;
+            x += sin(moveTimer) * 2.5f;
+            // Keep the boss within screen bounds
+            if (x < w/2 + 20) x = w/2 + 20;
+            if (x > WIN_W - w/2 - 20) x = WIN_W - w/2 - 20;
         }
     }
 }
