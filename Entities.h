@@ -2,14 +2,17 @@
 #define ENTITIES_H
 
 #include <vector>
+#include <string>
 
 const int WIN_W = 800;
 const int WIN_H = 600;
 
-enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME_OVER, PAUSED };
+enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME_OVER, GAME_WON, LEVEL_TRANSITION, PAUSED };
 
 void drawRect(float cx, float cy, float w, float h);
 void drawTriangle(float cx, float cy, float w, float h);
+void drawBresenhamLine(float x0, float y0, float x1, float y1);
+void drawMidpointCircle(float cx, float cy, float radius);
 
 bool aabb(float ax, float ay, float aw, float ah,
           float bx, float by, float bw, float bh);
@@ -36,6 +39,21 @@ private:
     std::vector<Star> stars;
 };
 
+struct NebulaPuff {
+    float x, y, radius, speed;
+    float r, g, b, alpha;
+};
+
+class NebulaField {
+public:
+    void init();
+    void update();
+    void draw() const;
+private:
+    std::vector<NebulaPuff> puffs;
+    std::vector<Star> stars;
+};
+
 struct Bullet {
     float x, y;
     float vx, vy;
@@ -57,6 +75,7 @@ struct EnemyBullet {
 struct Scrap {
     float x, y;
     float speed;
+    float angle;
     bool  alive;
 
     void update();
@@ -72,6 +91,7 @@ struct Enemy {
     int   hp;
     int   maxHp;
     int   shootCooldown;
+    float moveTimer;  // Used for boss oscillation
 
     void update(float playerX);
     void draw() const;
@@ -90,6 +110,18 @@ struct Player {
     float hitFlashTimer;
 
     void update(bool left, bool right, bool up, bool down);
+    void draw() const;
+};
+
+struct FloatingText {
+    float x, y;
+    std::string text;
+    float vx, vy;
+    float r, g, b;
+    float alpha;
+    bool alive;
+
+    void update();
     void draw() const;
 };
 
