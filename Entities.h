@@ -11,6 +11,8 @@ enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME
 
 void drawRect(float cx, float cy, float w, float h);
 void drawTriangle(float cx, float cy, float w, float h);
+void drawBresenhamLine(float x0, float y0, float x1, float y1);
+void drawMidpointCircle(float cx, float cy, float radius);
 
 bool aabb(float ax, float ay, float aw, float ah,
           float bx, float by, float bw, float bh);

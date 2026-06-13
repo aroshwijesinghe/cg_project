@@ -20,6 +20,65 @@ void drawTriangle(float cx, float cy, float w, float h) {
     glEnd();
 }
 
+void drawBresenhamLine(float x0, float y0, float x1, float y1) {
+    int ix0 = (int)std::round(x0);
+    int iy0 = (int)std::round(y0);
+    int ix1 = (int)std::round(x1);
+    int iy1 = (int)std::round(y1);
+
+    int dx = std::abs(ix1 - ix0);
+    int dy = std::abs(iy1 - iy0);
+    int sx = (ix0 < ix1) ? 1 : -1;
+    int sy = (iy0 < iy1) ? 1 : -1;
+    int err = dx - dy;
+
+    glBegin(GL_POINTS);
+    while (true) {
+        glVertex2i(ix0, iy0);
+        if (ix0 == ix1 && iy0 == iy1) break;
+        int e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            ix0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            iy0 += sy;
+        }
+    }
+    glEnd();
+}
+
+void drawMidpointCircle(float cx, float cy, float radius) {
+    int x = 0;
+    int y = (int)std::round(radius);
+    int d = 1 - y;
+
+    auto plot8 = [&](int px, int py) {
+        glVertex2i((int)std::round(cx) + px, (int)std::round(cy) + py);
+        glVertex2i((int)std::round(cx) - px, (int)std::round(cy) + py);
+        glVertex2i((int)std::round(cx) + px, (int)std::round(cy) - py);
+        glVertex2i((int)std::round(cx) - px, (int)std::round(cy) - py);
+        glVertex2i((int)std::round(cx) + py, (int)std::round(cy) + px);
+        glVertex2i((int)std::round(cx) - py, (int)std::round(cy) + px);
+        glVertex2i((int)std::round(cx) + py, (int)std::round(cy) - px);
+        glVertex2i((int)std::round(cx) - py, (int)std::round(cy) - px);
+    };
+
+    glBegin(GL_POINTS);
+    while (x <= y) {
+        plot8(x, y);
+        if (d < 0) {
+            d += 2 * x + 3;
+        } else {
+            d += 2 * (x - y) + 5;
+            --y;
+        }
+        ++x;
+    }
+    glEnd();
+}
+
 bool aabb(float ax, float ay, float aw, float ah,
           float bx, float by, float bw, float bh) {
     return ax - aw/2 < bx + bw/2 &&
@@ -168,19 +227,23 @@ void Bullet::update() {
 
 void Bullet::draw() const {
     glColor3f(0.2f, 1.0f, 1.0f);
-    drawRect(x, y, 4, 12);
+    glPointSize(2.0f);
+    drawBresenhamLine(x, y - 6.0f, x, y + 6.0f);
+    glPointSize(1.0f);
 }
 
 void EnemyBullet::update() {
     y -= vy;
-    if (y < -10) {
+    if (y < -10 || y > WIN_H + 10) {
         alive = false;
     }
 }
 
 void EnemyBullet::draw() const {
     glColor3f(1.0f, 0.4f, 0.1f);
-    drawRect(x, y, 5, 12);
+    glPointSize(2.0f);
+    drawBresenhamLine(x, y - 6.0f, x, y + 6.0f);
+    glPointSize(1.0f);
 }
 
 void Scrap::update() {
@@ -775,12 +838,8 @@ void Player::draw() const {
         } else {
             glColor4f(0.0f, 0.8f, 1.0f, 0.4f);  // Regular blue shield
         }
-        glBegin(GL_LINE_LOOP);
-        for(int i = 0; i < 20; ++i) {
-            float theta = i * 2.0f * 3.14159f / 20.0f;
-            glVertex2f(x + cos(theta) * (w + 6), y + sin(theta) * (w + 6));
-        }
-        glEnd();
+        glPointSize(2.0f);
+        drawMidpointCircle(x, y, w + 6.0f);
         glDisable(GL_BLEND);
     }
 }

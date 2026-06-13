@@ -42,12 +42,19 @@ private:
     bool keyLeft, keyRight, keyUp, keyDown;
     float screenShakeTimer;
     float baseFlashTimer;
+    float superPowerCooldownTimer;
+    float superPowerPulseTimer;
+    float superPowerCenterX;
+    float superPowerCenterY;
+    static constexpr float SUPER_POWER_COOLDOWN_MAX = 360.0f;
+    static constexpr float SUPER_POWER_PULSE_MAX = 0.45f;
 
     void spawnEnemy();
     void spawnEnemyBullet(const Enemy& e);
     void spawnExplosion(float x, float y, float r, float g, float b);
     void spawnMuzzleFlash(float x, float y, float r, float g, float b);
     void spawnFloatingText(float x, float y, const std::string& text, float r, float g, float b, float vy = 1.2f);
+    void activateSuperPower();
     void checkCollisions();
     void startNextWave();
 
