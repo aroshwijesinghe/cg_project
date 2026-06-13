@@ -54,6 +54,7 @@ private:
     void drawShipSelect();
     void drawUpgradeShop();
     void drawHUD();
+    void drawVictoryScreen();
     void drawText(float x, float y, const std::string& s, void* font);
 };
 
