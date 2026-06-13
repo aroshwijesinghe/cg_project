@@ -10,13 +10,14 @@ Game::Game()
     : state(MAIN_MENU), score(0), credits(0), wave(1), enemySpawnTimer(0),
       enemiesSpawned(0), maxEnemies(5), baseShields(100), maxBaseShields(100),
       level(1), keyLeft(false), keyRight(false), keyUp(false), keyDown(false),
-            screenShakeTimer(0), baseFlashTimer(0), superPowerCooldownTimer(0),
-            superPowerPulseTimer(0), superPowerCenterX(WIN_W / 2.0f), superPowerCenterY(60.0f) {
+      screenShakeTimer(0), baseFlashTimer(0), superPowerCooldownTimer(0),
+      superPowerPulseTimer(0), superPowerCenterX(WIN_W / 2.0f), superPowerCenterY(60.0f),
+      superPowerReadyNotified(true) {
+    // Restore player default state
     player = { WIN_W / 2.0f, 60.0f, 40.0f, 30.0f, 6.0f };
 }
 
 void Game::init() {
-    glClearColor(0.01f, 0.01f, 0.04f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0, WIN_W, 0, WIN_H);
@@ -42,6 +43,7 @@ void Game::reset() {
     superPowerPulseTimer = 0.0f;
     superPowerCenterX = WIN_W / 2.0f;
     superPowerCenterY = 60.0f;
+    superPowerReadyNotified = true;
 
     bullets.clear();
     enemyBullets.clear();
@@ -258,6 +260,7 @@ void Game::activateSuperPower() {
     superPowerPulseTimer = SUPER_POWER_PULSE_MAX;
     superPowerCenterX = player.x;
     superPowerCenterY = player.y;
+    superPowerReadyNotified = false;
     screenShakeTimer = std::max(screenShakeTimer, 0.22f);
 
     spawnFloatingText(player.x - 70.0f, player.y + 30.0f, "SUPER POWER: REFRACT", 0.2f, 0.9f, 1.0f, 1.1f);
@@ -301,8 +304,31 @@ void Game::activateSuperPower() {
 void Game::update() {
     if (screenShakeTimer > 0) screenShakeTimer -= 0.016f;
     if (baseFlashTimer > 0) baseFlashTimer -= 0.016f;
+    
+    float prevCooldown = superPowerCooldownTimer;
     if (superPowerCooldownTimer > 0.0f) superPowerCooldownTimer -= 1.0f;
     if (superPowerCooldownTimer < 0.0f) superPowerCooldownTimer = 0.0f;
+    
+    // Notify when super power becomes ready
+    if (state == PLAYING && prevCooldown > 0.0f && superPowerCooldownTimer == 0.0f && !superPowerReadyNotified) {
+        superPowerReadyNotified = true;
+        spawnFloatingText(player.x - 80.0f, player.y + 40.0f, "SUPER POWER READY!", 0.2f, 0.9f, 1.0f, 1.5f);
+        
+        // Spawn cyan particle burst around player
+        for (int i = 0; i < 12; ++i) {
+            Particle p;
+            p.x = player.x;
+            p.y = player.y;
+            float angle = i * 2.0f * 3.14159f / 12.0f;
+            float spd = 2.0f + (rand() % 100) / 100.0f;
+            p.vx = cos(angle) * spd;
+            p.vy = sin(angle) * spd;
+            p.r = 0.2f; p.g = 0.9f; p.b = 1.0f;
+            p.lifetime = 0.6f + (rand() % 30) / 100.0f;
+            particles.push_back(p);
+        }
+    }
+    
     if (superPowerPulseTimer > 0.0f) superPowerPulseTimer -= 0.016f;
     if (superPowerPulseTimer < 0.0f) superPowerPulseTimer = 0.0f;
 

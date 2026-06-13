@@ -46,6 +46,7 @@ private:
     float superPowerPulseTimer;
     float superPowerCenterX;
     float superPowerCenterY;
+    bool superPowerReadyNotified;
     static constexpr float SUPER_POWER_COOLDOWN_MAX = 360.0f;
     static constexpr float SUPER_POWER_PULSE_MAX = 0.45f;
 
