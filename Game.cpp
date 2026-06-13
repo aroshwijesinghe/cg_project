@@ -9,7 +9,7 @@
 Game::Game() 
     : state(MAIN_MENU), score(0), credits(0), wave(1), enemySpawnTimer(0),
       enemiesSpawned(0), maxEnemies(5), baseShields(100), maxBaseShields(100),
-      keyLeft(false), keyRight(false), keyUp(false), keyDown(false),
+      level(1), keyLeft(false), keyRight(false), keyUp(false), keyDown(false),
       screenShakeTimer(0), baseFlashTimer(0) {
     player = { WIN_W / 2.0f, 60.0f, 40.0f, 30.0f, 6.0f };
 }
@@ -22,6 +22,7 @@ void Game::init() {
     glMatrixMode(GL_MODELVIEW);
     srand((unsigned)time(0));
     starField.init();
+    nebulaField.init();
     reset();
     state = MAIN_MENU;
 }
@@ -35,6 +36,7 @@ void Game::reset() {
     maxEnemies = 5;
     baseShields = 100;
     maxBaseShields = 100;
+    level = 1;
 
     bullets.clear();
     enemyBullets.clear();
@@ -71,7 +73,11 @@ void Game::startNextWave() {
 
     // Spawn floating text for wave start
     if (wave % 5 == 0) {
-        spawnFloatingText(WIN_W / 2.0f - 90.0f, WIN_H / 2.0f, "BOSS WAVE " + std::to_string(wave), 1.0f, 0.2f, 0.2f, 0.6f);
+        if (level == 2) {
+            spawnFloatingText(WIN_W / 2.0f - 110.0f, WIN_H / 2.0f, "OVERLORD INCOMING", 0.8f, 0.1f, 1.0f, 0.6f);
+        } else {
+            spawnFloatingText(WIN_W / 2.0f - 90.0f, WIN_H / 2.0f, "BOSS WAVE " + std::to_string(wave), 1.0f, 0.2f, 0.2f, 0.6f);
+        }
     } else {
         spawnFloatingText(WIN_W / 2.0f - 50.0f, WIN_H / 2.0f, "WAVE " + std::to_string(wave), 0.2f, 0.9f, 1.0f, 0.6f);
     }
@@ -81,16 +87,51 @@ void Game::spawnEnemy() {
     Enemy e;
     e.alive = true;
     e.shootCooldown = rand() % 50 + 30;
+    e.moveTimer = 0.0f;
 
     if (wave % 5 == 0) {
-        e.enemyType = 3;
-        e.w = 110.0f; e.h = 60.0f;
-        e.x = WIN_W / 2.0f;
-        e.y = WIN_H + 50.0f;
-        e.speed = 0.8f;
-        e.maxHp = 20 + wave * 5;
+        // Boss wave
+        if (level == 1) {
+            e.enemyType = 3;
+            e.w = 110.0f; e.h = 60.0f;
+            e.x = WIN_W / 2.0f;
+            e.y = WIN_H + 50.0f;
+            e.speed = 0.8f;
+            e.maxHp = 20 + wave * 5;
+        } else {
+            // Level 2 Boss: Nebula Overlord
+            e.enemyType = 7;
+            e.w = 130.0f; e.h = 70.0f;
+            e.x = WIN_W / 2.0f;
+            e.y = WIN_H + 60.0f;
+            e.speed = 0.8f;
+            e.maxHp = 60;
+        }
+        e.hp = e.maxHp;
+    } else if (level == 2) {
+        // Level 2 normal enemies
+        int roll = rand() % 100;
+        if (roll < 40) {
+            e.enemyType = 4; // Phantom
+            e.w = 34.0f; e.h = 34.0f;
+            e.speed = 1.4f + (rand() % 100) / 100.0f + (wave - 5) * 0.1f;
+            e.maxHp = 2;
+        } else if (roll < 75) {
+            e.enemyType = 5; // Sentinel
+            e.w = 36.0f; e.h = 36.0f;
+            e.speed = 1.0f + (rand() % 50) / 100.0f + (wave - 5) * 0.08f;
+            e.maxHp = 3;
+        } else {
+            e.enemyType = 6; // Wraith
+            e.w = 28.0f; e.h = 28.0f;
+            e.speed = 2.5f + (rand() % 100) / 100.0f + (wave - 5) * 0.15f;
+            e.maxHp = 1;
+        }
+        e.x = (float)(rand() % (WIN_W - 80) + 40);
+        e.y = WIN_H + 20.0f;
         e.hp = e.maxHp;
     } else {
+        // Level 1 normal enemies
         int roll = rand() % 100;
         if (roll < 45) {
             e.enemyType = 0;
@@ -127,6 +168,38 @@ void Game::spawnEnemyBullet(const Enemy& e) {
         enemyBullets.push_back(eb1);
         enemyBullets.push_back(eb2);
         enemyBullets.push_back(eb3);
+    } else if (e.enemyType == 5) {
+        // Sentinel: fires 2 spread bullets
+        EnemyBullet eb1 = { e.x - 10, e.y - e.h/2 - 6, 4.5f, true };
+        EnemyBullet eb2 = { e.x + 10, e.y - e.h/2 - 6, 4.5f, true };
+        enemyBullets.push_back(eb1);
+        enemyBullets.push_back(eb2);
+    } else if (e.enemyType == 7) {
+        // Nebula Overlord: phase-based attack patterns
+        float hpPct = (float)e.hp / e.maxHp;
+        if (hpPct > 0.6f) {
+            // Phase 1: 3 bullets downward
+            EnemyBullet eb1 = { e.x - 25, e.y - 35, 4.0f, true };
+            EnemyBullet eb2 = { e.x, e.y - 35, 4.5f, true };
+            EnemyBullet eb3 = { e.x + 25, e.y - 35, 4.0f, true };
+            enemyBullets.push_back(eb1);
+            enemyBullets.push_back(eb2);
+            enemyBullets.push_back(eb3);
+        } else if (hpPct > 0.3f) {
+            // Phase 2: 5-bullet spread fan
+            for (int i = -2; i <= 2; ++i) {
+                EnemyBullet eb = { e.x + i * 18.0f, e.y - 35, 4.2f + abs(i) * 0.3f, true };
+                enemyBullets.push_back(eb);
+            }
+        } else {
+            // Phase 3: 3 aimed bullets + spawn 2 Phantom minions occasionally
+            EnemyBullet eb1 = { e.x - 20, e.y - 35, 5.0f, true };
+            EnemyBullet eb2 = { e.x, e.y - 35, 5.5f, true };
+            EnemyBullet eb3 = { e.x + 20, e.y - 35, 5.0f, true };
+            enemyBullets.push_back(eb1);
+            enemyBullets.push_back(eb2);
+            enemyBullets.push_back(eb3);
+        }
     }
 }
 
@@ -193,17 +266,26 @@ void Game::update() {
         for (auto& e : enemies) {
             e.update(player.x);
             
-            if (e.enemyType == 1 || e.enemyType == 3) {
+            // Shooting enemies: type 1 (Shooter), 3 (L1 Boss), 5 (Sentinel), 7 (L2 Boss)
+            if (e.enemyType == 1 || e.enemyType == 3 || e.enemyType == 5 || e.enemyType == 7) {
                 e.shootCooldown--;
                 if (e.shootCooldown <= 0) {
                     spawnEnemyBullet(e);
-                    e.shootCooldown = (e.enemyType == 3) ? (rand() % 40 + 30) : (rand() % 100 + 80);
+                    if (e.enemyType == 3) e.shootCooldown = rand() % 40 + 30;
+                    else if (e.enemyType == 5) e.shootCooldown = rand() % 80 + 60;
+                    else if (e.enemyType == 7) {
+                        float hpPct = (float)e.hp / e.maxHp;
+                        if (hpPct > 0.6f) e.shootCooldown = rand() % 40 + 35;
+                        else if (hpPct > 0.3f) e.shootCooldown = rand() % 30 + 25;
+                        else e.shootCooldown = rand() % 20 + 15;
+                    }
+                    else e.shootCooldown = rand() % 100 + 80;
                 }
             }
 
             if (e.y < -20.0f) {
                 e.alive = false;
-                int dmg = (e.enemyType == 3) ? 50 : 10;
+                int dmg = (e.enemyType == 3 || e.enemyType == 7) ? 50 : 10;
                 baseShields -= dmg;
                 if (baseShields < 0) baseShields = 0;
                 baseFlashTimer = 0.25f;
@@ -228,8 +310,18 @@ void Game::update() {
         }
 
         if (enemiesSpawned >= maxEnemies && enemies.empty()) {
-            state = UPGRADE_SHOP;
-            player.shields = player.maxShields;
+            if (wave % 5 == 0) {
+                if (level == 1) {
+                    // Level 1 boss defeated — transition to Level 2
+                    state = LEVEL_TRANSITION;
+                } else {
+                    // Level 2 boss defeated — final victory!
+                    state = GAME_WON;
+                }
+            } else {
+                state = UPGRADE_SHOP;
+                player.shields = player.maxShields;
+            }
         }
 
         for (auto& s : scraps) {
@@ -281,6 +373,7 @@ void Game::update() {
         [](const FloatingText& ft){ return !ft.alive; }), floatingTexts.end());
 
     starField.update();
+    nebulaField.update();
 }
 
 void Game::checkCollisions() {
@@ -295,14 +388,14 @@ void Game::checkCollisions() {
 
                 if (e.hp <= 0) {
                     e.alive = false;
-                    int pts = (e.enemyType == 3) ? 100 : 10;
+                    int pts = (e.enemyType == 3 || e.enemyType == 7) ? 100 : 10;
                     score += pts;
                     spawnExplosion(e.x, e.y, 1.0f, 0.4f, 0.1f);
                     spawnFloatingText(e.x, e.y, "+" + std::to_string(pts), 1.0f, 1.0f, 1.0f, 1.0f);
 
-                    if (e.enemyType == 3) {
-                        for (int i = 0; i < 6; ++i) {
-                            Scrap s = { e.x + (rand() % 40 - 20), e.y + (rand() % 40 - 20), 1.2f, 0.0f, true };
+                    if (e.enemyType == 3 || e.enemyType == 7) {
+                        for (int i = 0; i < 8; ++i) {
+                            Scrap s = { e.x + (rand() % 60 - 30), e.y + (rand() % 60 - 30), 1.2f, 0.0f, true };
                             scraps.push_back(s);
                         }
                     } else if (rand() % 100 < 55) {
@@ -322,7 +415,7 @@ void Game::checkCollisions() {
             
             player.hitFlashTimer = 0.2f;
             screenShakeTimer = 0.28f;
-            int dmg = (e.enemyType == 3) ? 3 : 1;
+            int dmg = (e.enemyType == 3 || e.enemyType == 7) ? 3 : 1;
             int prevShields = player.shields;
             int prevHull = player.hull;
 
@@ -403,7 +496,12 @@ void Game::draw() {
         glTranslatef(shakeX, shakeY, 0.0f);
     }
 
-    starField.draw();
+    // Draw background based on current level
+    if (level == 2 && state != MAIN_MENU && state != GUIDELINES && state != SHIP_SELECT) {
+        nebulaField.draw();
+    } else {
+        starField.draw();
+    }
 
     if (state == MAIN_MENU) {
         drawMainMenu();
@@ -416,6 +514,12 @@ void Game::draw() {
     }
     else if (state == UPGRADE_SHOP) {
         drawUpgradeShop();
+    }
+    else if (state == GAME_WON) {
+        drawVictoryScreen();
+    }
+    else if (state == LEVEL_TRANSITION) {
+        drawLevelTransition();
     }
     else if (state == PLAYING || state == GAME_OVER) {
         for (const auto& b : bullets) b.draw();
@@ -453,10 +557,30 @@ void Game::draw() {
 }
 
 void Game::drawMainMenu() {
+    // 1. Draw Title Accents (Modern Sci-Fi Lines)
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+        glColor3f(0.2f, 0.9f, 1.0f); // Cyan
+        glVertex2f(WIN_W / 2 - 200, WIN_H / 2 + 160);
+        glVertex2f(WIN_W / 2 - 180, WIN_H / 2 + 160);
+
+        glVertex2f(WIN_W / 2 + 180, WIN_H / 2 + 160);
+        glVertex2f(WIN_W / 2 + 200, WIN_H / 2 + 160);
+        
+        glColor3f(1.0f, 0.8f, 0.2f); // Orange
+        glVertex2f(WIN_W / 2 - 110, WIN_H / 2 + 110);
+        glVertex2f(WIN_W / 2 - 100, WIN_H / 2 + 110);
+
+        glVertex2f(WIN_W / 2 + 100, WIN_H / 2 + 110);
+        glVertex2f(WIN_W / 2 + 110, WIN_H / 2 + 110);
+    glEnd();
+
+    // 2. Title Text
     glColor3f(0.2f, 0.9f, 1.0f);
-    drawText(WIN_W / 2 - 170, WIN_H / 2 + 150, "SPACE ODYSSEY", GLUT_BITMAP_TIMES_ROMAN_24);
+    // Changed from Times Roman to Helvetica for a modern sci-fi look
+    drawText(WIN_W / 2 - 90, WIN_H / 2 + 150, "SPACE ODYSSEY", GLUT_BITMAP_HELVETICA_18);
     glColor3f(1.0f, 0.8f, 0.2f);
-    drawText(WIN_W / 2 - 90, WIN_H / 2 + 100, "ROGUE STARSHIP", GLUT_BITMAP_HELVETICA_18);
+    drawText(WIN_W / 2 - 95, WIN_H / 2 + 100, "ROGUE STARSHIP", GLUT_BITMAP_HELVETICA_18);
 
     std::string btns[3] = { "[1] START GAME", "[2] HOW TO PLAY", "[3] EXIT" };
     float ys[3] = { WIN_H / 2.0f + 30.0f, WIN_H / 2.0f - 30.0f, WIN_H / 2.0f - 90.0f };
@@ -464,23 +588,50 @@ void Game::drawMainMenu() {
     for (int i = 0; i < 3; ++i) {
         float bx = WIN_W / 2.0f;
         float by = ys[i];
-        float bw = 240.0f;
+        float bw = 260.0f;
         float bh = 45.0f;
+        float corner = 12.0f; // Sci-fi angled corners
 
-        glColor3f(0.08f, 0.15f, 0.3f);
-        drawRect(bx, by, bw, bh);
+        // 3. Gradient filled background for button (2D Filling)
+        glBegin(GL_POLYGON);
+            glColor3f(0.04f, 0.08f, 0.2f); // Darker blue at top
+            glVertex2f(bx - bw/2 + corner, by + bh/2);
+            glVertex2f(bx + bw/2 - corner, by + bh/2);
+            
+            glColor3f(0.1f, 0.3f, 0.6f); // Lighter blue at bottom
+            glVertex2f(bx + bw/2, by + bh/2 - corner);
+            glVertex2f(bx + bw/2, by - bh/2 + corner);
+            glVertex2f(bx + bw/2 - corner, by - bh/2);
+            glVertex2f(bx - bw/2 + corner, by - bh/2);
+            glVertex2f(bx - bw/2, by - bh/2 + corner);
+            glVertex2f(bx - bw/2, by + bh/2 - corner);
+        glEnd();
         
+        // 4. Cyberpunk outline (2D Drawing)
         glColor3f(0.2f, 0.9f, 1.0f);
         glLineWidth(2.0f);
         glBegin(GL_LINE_LOOP);
-            glVertex2f(bx - bw/2, by - bh/2);
-            glVertex2f(bx + bw/2, by - bh/2);
-            glVertex2f(bx + bw/2, by + bh/2);
-            glVertex2f(bx - bw/2, by + bh/2);
+            glVertex2f(bx - bw/2 + corner, by + bh/2);
+            glVertex2f(bx + bw/2 - corner, by + bh/2);
+            glVertex2f(bx + bw/2, by + bh/2 - corner);
+            glVertex2f(bx + bw/2, by - bh/2 + corner);
+            glVertex2f(bx + bw/2 - corner, by - bh/2);
+            glVertex2f(bx - bw/2 + corner, by - bh/2);
+            glVertex2f(bx - bw/2, by - bh/2 + corner);
+            glVertex2f(bx - bw/2, by + bh/2 - corner);
         glEnd();
 
+        // 5. Decorative filled triangle on the left side (2D Filling)
+        glBegin(GL_TRIANGLES);
+            glColor3f(1.0f, 0.8f, 0.2f); // Orange
+            glVertex2f(bx - bw/2 + 15.0f, by);
+            glVertex2f(bx - bw/2 + 23.0f, by + 5.0f);
+            glVertex2f(bx - bw/2 + 23.0f, by - 5.0f);
+        glEnd();
+
+        // 6. Button Text
         glColor3f(1.0f, 1.0f, 1.0f);
-        drawText(bx - btns[i].length() * 4.5f, by - 6.0f, btns[i], GLUT_BITMAP_HELVETICA_12);
+        drawText(bx - btns[i].length() * 4.5f + 15.0f, by - 5.0f, btns[i], GLUT_BITMAP_HELVETICA_12);
     }
 }
 
@@ -659,7 +810,8 @@ void Game::drawUpgradeShop() {
     };
 
     for (int i = 0; i < 4; ++i) {
-        float bx = WIN_W / 2.0f;
+        // Shifted right by 70 pixels to align properly and prevent overlap with the stats box
+        float bx = WIN_W / 2.0f + 70.0f;
         float by = ys[i];
         float bw = 350.0f;
         float bh = 45.0f;
@@ -701,6 +853,93 @@ void Game::drawUpgradeShop() {
     }
 }
 
+void Game::drawVictoryScreen() {
+    // Title
+    glColor3f(1.0f, 0.85f, 0.0f);
+    drawText(WIN_W / 2 - 120, WIN_H / 2 + 140, "CONGRATULATIONS!", GLUT_BITMAP_HELVETICA_18);
+
+    glColor3f(0.2f, 0.9f, 1.0f);
+    drawText(WIN_W / 2 - 70, WIN_H / 2 + 100, "YOU HAVE WON!", GLUT_BITMAP_HELVETICA_18);
+
+    // Decorative lines
+    glLineWidth(2.0f);
+    glColor3f(1.0f, 0.85f, 0.0f);
+    glBegin(GL_LINES);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 + 80);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 + 80);
+    glEnd();
+
+    // Stats
+    glColor3f(1.0f, 1.0f, 1.0f);
+    std::stringstream sc;
+    sc << "FINAL SCORE: " << score;
+    drawText(WIN_W / 2 - 60, WIN_H / 2 + 40, sc.str(), GLUT_BITMAP_HELVETICA_18);
+
+    std::stringstream wv;
+    wv << "WAVES SURVIVED: " << wave;
+    drawText(WIN_W / 2 - 70, WIN_H / 2 + 10, wv.str(), GLUT_BITMAP_HELVETICA_12);
+
+    std::stringstream cr;
+    cr << "SCRAP COLLECTED: " << credits;
+    drawText(WIN_W / 2 - 70, WIN_H / 2 - 15, cr.str(), GLUT_BITMAP_HELVETICA_12);
+
+    // Decorative lines
+    glLineWidth(2.0f);
+    glColor3f(1.0f, 0.85f, 0.0f);
+    glBegin(GL_LINES);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 - 40);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 - 40);
+    glEnd();
+
+    // Prompt to go back
+    glColor3f(0.6f, 0.6f, 0.6f);
+    drawText(WIN_W / 2 - 100, WIN_H / 2 - 80, "Press R to return to Main Menu", GLUT_BITMAP_HELVETICA_12);
+}
+
+void Game::drawLevelTransition() {
+    // Big title
+    glColor3f(0.6f, 0.1f, 0.8f);
+    drawText(WIN_W / 2 - 50, WIN_H / 2 + 160, "LEVEL 2", GLUT_BITMAP_HELVETICA_18);
+
+    glColor3f(0.8f, 0.3f, 1.0f);
+    drawText(WIN_W / 2 - 75, WIN_H / 2 + 120, "NEBULA ZONE", GLUT_BITMAP_HELVETICA_18);
+
+    // Decorative line
+    glLineWidth(2.0f);
+    glColor3f(0.6f, 0.1f, 0.8f);
+    glBegin(GL_LINES);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 + 100);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 + 100);
+    glEnd();
+
+    // Info
+    glColor3f(1.0f, 1.0f, 1.0f);
+    drawText(WIN_W / 2 - 130, WIN_H / 2 + 60, "New enemies. New environment.", GLUT_BITMAP_HELVETICA_12);
+    drawText(WIN_W / 2 - 115, WIN_H / 2 + 35, "Your upgrades carry over.", GLUT_BITMAP_HELVETICA_12);
+
+    // Stats carry-over summary
+    glColor3f(0.2f, 0.9f, 1.0f);
+    std::stringstream hp;
+    hp << "Hull: " << player.hull << "/" << player.maxHull << "  Shields: " << player.shields << "/" << player.maxShields;
+    drawText(WIN_W / 2 - 100, WIN_H / 2 - 10, hp.str(), GLUT_BITMAP_HELVETICA_12);
+
+    std::stringstream wp;
+    wp << "Weapon Level: " << player.weaponLevel << "  Scrap: " << credits;
+    drawText(WIN_W / 2 - 90, WIN_H / 2 - 35, wp.str(), GLUT_BITMAP_HELVETICA_12);
+
+    // Decorative line
+    glLineWidth(2.0f);
+    glColor3f(0.6f, 0.1f, 0.8f);
+    glBegin(GL_LINES);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 - 60);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 - 60);
+    glEnd();
+
+    // Prompt
+    glColor3f(1.0f, 0.85f, 0.0f);
+    drawText(WIN_W / 2 - 115, WIN_H / 2 - 100, "Press ENTER to begin Level 2", GLUT_BITMAP_HELVETICA_12);
+}
+
 void Game::drawHUD() {
     glColor4f(0.02f, 0.02f, 0.1f, 0.5f);
     glEnable(GL_BLEND);
@@ -710,7 +949,7 @@ void Game::drawHUD() {
 
     glColor3f(1.0f, 1.0f, 1.0f);
     std::stringstream sw;
-    sw << "Score: " << score << "   Wave: " << wave;
+    sw << "Score: " << score << "   Wave: " << wave << "   Lvl: " << level;
     drawText(15, WIN_H - 32, sw.str(), GLUT_BITMAP_HELVETICA_18);
 
     std::stringstream sc;
@@ -753,7 +992,11 @@ void Game::drawHUD() {
         glColor3f(1.0f, 0.2f, 0.2f);
         drawText(WIN_W/2 - 70, WIN_H/2 + 20, "GAME OVER", GLUT_BITMAP_TIMES_ROMAN_24);
         glColor3f(1.0f, 1.0f, 1.0f);
-        drawText(WIN_W/2 - 90, WIN_H/2 - 10, "Press R to restart", GLUT_BITMAP_HELVETICA_18);
+        if (level == 2) {
+            drawText(WIN_W/2 - 105, WIN_H/2 - 10, "Press R to retry Level 2", GLUT_BITMAP_HELVETICA_18);
+        } else {
+            drawText(WIN_W/2 - 90, WIN_H/2 - 10, "Press R to restart", GLUT_BITMAP_HELVETICA_18);
+        }
     }
 }
 
@@ -844,8 +1087,66 @@ void Game::handleInput(unsigned char key, bool pressed) {
         }
         else if (state == GAME_OVER) {
             if (key == 'r' || key == 'R') {
+                if (level == 2) {
+                    // Retry Level 2 — keep ship type, restart at wave 6
+                    int savedShipType = player.shipType;
+                    float savedSpeed = player.speed;
+                    int savedMaxHull = player.maxHull;
+                    int savedMaxShields = player.maxShields;
+
+                    wave = 5;
+                    enemiesSpawned = 0;
+                    enemySpawnTimer = 0;
+                    baseShields = maxBaseShields;
+                    bullets.clear();
+                    enemyBullets.clear();
+                    enemies.clear();
+                    scraps.clear();
+                    particles.clear();
+                    floatingTexts.clear();
+
+                    player.x = WIN_W / 2.0f;
+                    player.y = 60.0f;
+                    player.shipType = savedShipType;
+                    player.speed = savedSpeed;
+                    player.hull = savedMaxHull;
+                    player.maxHull = savedMaxHull;
+                    player.shields = savedMaxShields;
+                    player.maxShields = savedMaxShields;
+                    player.weaponLevel = 1;
+                    player.hitFlashTimer = 0.0f;
+                    credits = 0;
+                    score = 0;
+
+                    startNextWave();
+                } else {
+                    reset();
+                    state = MAIN_MENU;
+                }
+            }
+            return;
+        }
+        else if (state == GAME_WON) {
+            if (key == 'r' || key == 'R') {
                 reset();
                 state = MAIN_MENU;
+            }
+            return;
+        }
+        else if (state == LEVEL_TRANSITION) {
+            if (key == 13) { // Enter key
+                // Transition to Level 2 — keep player stats, reset wave
+                level = 2;
+                wave = 5; // startNextWave will increment to 6 (first Level 2 wave)
+                enemiesSpawned = 0;
+                bullets.clear();
+                enemyBullets.clear();
+                enemies.clear();
+                scraps.clear();
+                floatingTexts.clear();
+                player.shields = player.maxShields;
+                baseShields = maxBaseShields; // Refill base shields
+                startNextWave();
             }
             return;
         }

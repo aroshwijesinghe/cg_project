@@ -7,7 +7,7 @@
 const int WIN_W = 800;
 const int WIN_H = 600;
 
-enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME_OVER, PAUSED };
+enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME_OVER, GAME_WON, LEVEL_TRANSITION, PAUSED };
 
 void drawRect(float cx, float cy, float w, float h);
 void drawTriangle(float cx, float cy, float w, float h);
@@ -34,6 +34,21 @@ public:
     void update();
     void draw() const;
 private:
+    std::vector<Star> stars;
+};
+
+struct NebulaPuff {
+    float x, y, radius, speed;
+    float r, g, b, alpha;
+};
+
+class NebulaField {
+public:
+    void init();
+    void update();
+    void draw() const;
+private:
+    std::vector<NebulaPuff> puffs;
     std::vector<Star> stars;
 };
 
@@ -74,6 +89,7 @@ struct Enemy {
     int   hp;
     int   maxHp;
     int   shootCooldown;
+    float moveTimer;  // Used for boss oscillation
 
     void update(float playerX);
     void draw() const;
