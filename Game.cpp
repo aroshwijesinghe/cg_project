@@ -90,6 +90,7 @@ void Game::spawnEnemy() {
         e.speed = 0.8f;
         e.maxHp = 20 + wave * 5;
         e.hp = e.maxHp;
+        e.moveTimer = 0.0f;
     } else {
         int roll = rand() % 100;
         if (roll < 45) {
@@ -228,8 +229,13 @@ void Game::update() {
         }
 
         if (enemiesSpawned >= maxEnemies && enemies.empty()) {
-            state = UPGRADE_SHOP;
-            player.shields = player.maxShields;
+            // Check if this was a boss wave (final wave)
+            if (wave % 5 == 0) {
+                state = GAME_WON;
+            } else {
+                state = UPGRADE_SHOP;
+                player.shields = player.maxShields;
+            }
         }
 
         for (auto& s : scraps) {
@@ -417,6 +423,9 @@ void Game::draw() {
     else if (state == UPGRADE_SHOP) {
         drawUpgradeShop();
     }
+    else if (state == GAME_WON) {
+        drawVictoryScreen();
+    }
     else if (state == PLAYING || state == GAME_OVER) {
         for (const auto& b : bullets) b.draw();
         for (const auto& eb : enemyBullets) eb.draw();
@@ -453,10 +462,30 @@ void Game::draw() {
 }
 
 void Game::drawMainMenu() {
+    // 1. Draw Title Accents (Modern Sci-Fi Lines)
+    glLineWidth(2.0f);
+    glBegin(GL_LINES);
+        glColor3f(0.2f, 0.9f, 1.0f); // Cyan
+        glVertex2f(WIN_W / 2 - 200, WIN_H / 2 + 160);
+        glVertex2f(WIN_W / 2 - 180, WIN_H / 2 + 160);
+
+        glVertex2f(WIN_W / 2 + 180, WIN_H / 2 + 160);
+        glVertex2f(WIN_W / 2 + 200, WIN_H / 2 + 160);
+        
+        glColor3f(1.0f, 0.8f, 0.2f); // Orange
+        glVertex2f(WIN_W / 2 - 110, WIN_H / 2 + 110);
+        glVertex2f(WIN_W / 2 - 100, WIN_H / 2 + 110);
+
+        glVertex2f(WIN_W / 2 + 100, WIN_H / 2 + 110);
+        glVertex2f(WIN_W / 2 + 110, WIN_H / 2 + 110);
+    glEnd();
+
+    // 2. Title Text
     glColor3f(0.2f, 0.9f, 1.0f);
-    drawText(WIN_W / 2 - 170, WIN_H / 2 + 150, "SPACE ODYSSEY", GLUT_BITMAP_TIMES_ROMAN_24);
+    // Changed from Times Roman to Helvetica for a modern sci-fi look
+    drawText(WIN_W / 2 - 90, WIN_H / 2 + 150, "SPACE ODYSSEY", GLUT_BITMAP_HELVETICA_18);
     glColor3f(1.0f, 0.8f, 0.2f);
-    drawText(WIN_W / 2 - 90, WIN_H / 2 + 100, "ROGUE STARSHIP", GLUT_BITMAP_HELVETICA_18);
+    drawText(WIN_W / 2 - 95, WIN_H / 2 + 100, "ROGUE STARSHIP", GLUT_BITMAP_HELVETICA_18);
 
     std::string btns[3] = { "[1] START GAME", "[2] HOW TO PLAY", "[3] EXIT" };
     float ys[3] = { WIN_H / 2.0f + 30.0f, WIN_H / 2.0f - 30.0f, WIN_H / 2.0f - 90.0f };
@@ -464,23 +493,50 @@ void Game::drawMainMenu() {
     for (int i = 0; i < 3; ++i) {
         float bx = WIN_W / 2.0f;
         float by = ys[i];
-        float bw = 240.0f;
+        float bw = 260.0f;
         float bh = 45.0f;
+        float corner = 12.0f; // Sci-fi angled corners
 
-        glColor3f(0.08f, 0.15f, 0.3f);
-        drawRect(bx, by, bw, bh);
+        // 3. Gradient filled background for button (2D Filling)
+        glBegin(GL_POLYGON);
+            glColor3f(0.04f, 0.08f, 0.2f); // Darker blue at top
+            glVertex2f(bx - bw/2 + corner, by + bh/2);
+            glVertex2f(bx + bw/2 - corner, by + bh/2);
+            
+            glColor3f(0.1f, 0.3f, 0.6f); // Lighter blue at bottom
+            glVertex2f(bx + bw/2, by + bh/2 - corner);
+            glVertex2f(bx + bw/2, by - bh/2 + corner);
+            glVertex2f(bx + bw/2 - corner, by - bh/2);
+            glVertex2f(bx - bw/2 + corner, by - bh/2);
+            glVertex2f(bx - bw/2, by - bh/2 + corner);
+            glVertex2f(bx - bw/2, by + bh/2 - corner);
+        glEnd();
         
+        // 4. Cyberpunk outline (2D Drawing)
         glColor3f(0.2f, 0.9f, 1.0f);
         glLineWidth(2.0f);
         glBegin(GL_LINE_LOOP);
-            glVertex2f(bx - bw/2, by - bh/2);
-            glVertex2f(bx + bw/2, by - bh/2);
-            glVertex2f(bx + bw/2, by + bh/2);
-            glVertex2f(bx - bw/2, by + bh/2);
+            glVertex2f(bx - bw/2 + corner, by + bh/2);
+            glVertex2f(bx + bw/2 - corner, by + bh/2);
+            glVertex2f(bx + bw/2, by + bh/2 - corner);
+            glVertex2f(bx + bw/2, by - bh/2 + corner);
+            glVertex2f(bx + bw/2 - corner, by - bh/2);
+            glVertex2f(bx - bw/2 + corner, by - bh/2);
+            glVertex2f(bx - bw/2, by - bh/2 + corner);
+            glVertex2f(bx - bw/2, by + bh/2 - corner);
         glEnd();
 
+        // 5. Decorative filled triangle on the left side (2D Filling)
+        glBegin(GL_TRIANGLES);
+            glColor3f(1.0f, 0.8f, 0.2f); // Orange
+            glVertex2f(bx - bw/2 + 15.0f, by);
+            glVertex2f(bx - bw/2 + 23.0f, by + 5.0f);
+            glVertex2f(bx - bw/2 + 23.0f, by - 5.0f);
+        glEnd();
+
+        // 6. Button Text
         glColor3f(1.0f, 1.0f, 1.0f);
-        drawText(bx - btns[i].length() * 4.5f, by - 6.0f, btns[i], GLUT_BITMAP_HELVETICA_12);
+        drawText(bx - btns[i].length() * 4.5f + 15.0f, by - 5.0f, btns[i], GLUT_BITMAP_HELVETICA_12);
     }
 }
 
@@ -659,7 +715,8 @@ void Game::drawUpgradeShop() {
     };
 
     for (int i = 0; i < 4; ++i) {
-        float bx = WIN_W / 2.0f;
+        // Shifted right by 70 pixels to align properly and prevent overlap with the stats box
+        float bx = WIN_W / 2.0f + 70.0f;
         float by = ys[i];
         float bw = 350.0f;
         float bh = 45.0f;
@@ -699,6 +756,49 @@ void Game::drawUpgradeShop() {
             drawText(bx - shopTexts[i].length() * 4.0f + shopTexts[i].length() * 8.0f, by - 6, reasonTexts[i], GLUT_BITMAP_HELVETICA_12);
         }
     }
+}
+
+void Game::drawVictoryScreen() {
+    // Title
+    glColor3f(1.0f, 0.85f, 0.0f);
+    drawText(WIN_W / 2 - 120, WIN_H / 2 + 140, "CONGRATULATIONS!", GLUT_BITMAP_HELVETICA_18);
+
+    glColor3f(0.2f, 0.9f, 1.0f);
+    drawText(WIN_W / 2 - 70, WIN_H / 2 + 100, "YOU HAVE WON!", GLUT_BITMAP_HELVETICA_18);
+
+    // Decorative lines
+    glLineWidth(2.0f);
+    glColor3f(1.0f, 0.85f, 0.0f);
+    glBegin(GL_LINES);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 + 80);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 + 80);
+    glEnd();
+
+    // Stats
+    glColor3f(1.0f, 1.0f, 1.0f);
+    std::stringstream sc;
+    sc << "FINAL SCORE: " << score;
+    drawText(WIN_W / 2 - 60, WIN_H / 2 + 40, sc.str(), GLUT_BITMAP_HELVETICA_18);
+
+    std::stringstream wv;
+    wv << "WAVES SURVIVED: " << wave;
+    drawText(WIN_W / 2 - 70, WIN_H / 2 + 10, wv.str(), GLUT_BITMAP_HELVETICA_12);
+
+    std::stringstream cr;
+    cr << "SCRAP COLLECTED: " << credits;
+    drawText(WIN_W / 2 - 70, WIN_H / 2 - 15, cr.str(), GLUT_BITMAP_HELVETICA_12);
+
+    // Decorative lines
+    glLineWidth(2.0f);
+    glColor3f(1.0f, 0.85f, 0.0f);
+    glBegin(GL_LINES);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 - 40);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 - 40);
+    glEnd();
+
+    // Prompt to go back
+    glColor3f(0.6f, 0.6f, 0.6f);
+    drawText(WIN_W / 2 - 100, WIN_H / 2 - 80, "Press R to return to Main Menu", GLUT_BITMAP_HELVETICA_12);
 }
 
 void Game::drawHUD() {
@@ -843,6 +943,13 @@ void Game::handleInput(unsigned char key, bool pressed) {
             return;
         }
         else if (state == GAME_OVER) {
+            if (key == 'r' || key == 'R') {
+                reset();
+                state = MAIN_MENU;
+            }
+            return;
+        }
+        else if (state == GAME_WON) {
             if (key == 'r' || key == 'R') {
                 reset();
                 state = MAIN_MENU;
