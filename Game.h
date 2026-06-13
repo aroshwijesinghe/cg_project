@@ -27,6 +27,7 @@ private:
     int maxEnemies;
     int baseShields;
     int maxBaseShields;
+    int level;
 
     Player player;
     std::vector<Bullet> bullets;
@@ -36,6 +37,7 @@ private:
     std::vector<Particle> particles;
     std::vector<FloatingText> floatingTexts;
     StarField starField;
+    NebulaField nebulaField;
 
     bool keyLeft, keyRight, keyUp, keyDown;
     float screenShakeTimer;
@@ -55,6 +57,7 @@ private:
     void drawUpgradeShop();
     void drawHUD();
     void drawVictoryScreen();
+    void drawLevelTransition();
     void drawText(float x, float y, const std::string& s, void* font);
 };
 
