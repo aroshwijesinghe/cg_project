@@ -15,9 +15,10 @@ Defend your starbase from waves of enemy ships. Destroy enemies to collect **scr
 - 🚀 3 selectable starships with unique stats
 - 👾 4 enemy types including a heavy boss carrier
 - 🛒 Upgrade shop between waves (weapons, hull repair, shields)
-- 💥 Particle effects and screen shake feedback
-- ⭐ Scrolling star field background
-- 📈 Progressive wave difficulty scaling
+- 💥 Particle effects, screen shake feedback, and muzzle flashes
+- ⭐ Scrolling star field and nebula background elements
+- 📈 Progressive wave difficulty scaling with Level transitions and Victory Screen
+- 💯 Floating combat text for damage and score
 
 ## 🎯 Controls
 
@@ -50,6 +51,7 @@ spaceshooter/
 ├── Entities.h          Entity structs (Player, Enemy, Bullet, etc.)
 ├── Entities.cpp        Entity update and draw implementations
 ├── spaceshooter.cbp    Code::Blocks project file
+├── test_suite.cpp      Unit tests for engine components
 └── README.md           This file
 ```
 
@@ -64,6 +66,15 @@ spaceshooter/
 
 ```bash
 g++ main.cpp Game.cpp Entities.cpp -o spaceshooter.exe -lglut32 -lopengl32 -lglu32 -std=c++11
+```
+
+### Running Unit Tests
+
+To compile and run the engine's test suite:
+
+```bash
+g++ test_suite.cpp Entities.cpp -o run_tests.exe -lglut32 -lopengl32 -lglu32 -std=c++11
+.\run_tests.exe
 ```
 
 > **Note:** Make sure MinGW's `bin` directory is in your system PATH. If using Code::Blocks MinGW:
