@@ -7,7 +7,7 @@
 const int WIN_W = 800;
 const int WIN_H = 600;
 
-enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME_OVER, PAUSED };
+enum GameState { MAIN_MENU, GUIDELINES, SHIP_SELECT, PLAYING, UPGRADE_SHOP, GAME_OVER, GAME_WON, PAUSED };
 
 void drawRect(float cx, float cy, float w, float h);
 void drawTriangle(float cx, float cy, float w, float h);
@@ -74,6 +74,7 @@ struct Enemy {
     int   hp;
     int   maxHp;
     int   shootCooldown;
+    float moveTimer;  // Used for boss oscillation
 
     void update(float playerX);
     void draw() const;
