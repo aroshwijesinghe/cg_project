@@ -10,12 +10,14 @@ Game::Game()
     : state(MAIN_MENU), score(0), credits(0), wave(1), enemySpawnTimer(0),
       enemiesSpawned(0), maxEnemies(5), baseShields(100), maxBaseShields(100),
       level(1), keyLeft(false), keyRight(false), keyUp(false), keyDown(false),
-      screenShakeTimer(0), baseFlashTimer(0) {
+      screenShakeTimer(0), baseFlashTimer(0), superPowerCooldownTimer(0),
+      superPowerPulseTimer(0), superPowerCenterX(WIN_W / 2.0f), superPowerCenterY(60.0f),
+      superPowerReadyNotified(true) {
+    // Restore player default state
     player = { WIN_W / 2.0f, 60.0f, 40.0f, 30.0f, 6.0f };
 }
 
 void Game::init() {
-    glClearColor(0.01f, 0.01f, 0.04f, 1.0f);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     gluOrtho2D(0, WIN_W, 0, WIN_H);
@@ -37,6 +39,11 @@ void Game::reset() {
     baseShields = 100;
     maxBaseShields = 100;
     level = 1;
+    superPowerCooldownTimer = 0.0f;
+    superPowerPulseTimer = 0.0f;
+    superPowerCenterX = WIN_W / 2.0f;
+    superPowerCenterY = 60.0f;
+    superPowerReadyNotified = true;
 
     bullets.clear();
     enemyBullets.clear();
@@ -244,9 +251,86 @@ void Game::spawnFloatingText(float x, float y, const std::string& text, float r,
     floatingTexts.push_back(ft);
 }
 
+void Game::activateSuperPower() {
+    if (state != PLAYING || superPowerCooldownTimer > 0.0f) {
+        return;
+    }
+
+    superPowerCooldownTimer = SUPER_POWER_COOLDOWN_MAX;
+    superPowerPulseTimer = SUPER_POWER_PULSE_MAX;
+    superPowerCenterX = player.x;
+    superPowerCenterY = player.y;
+    superPowerReadyNotified = false;
+    screenShakeTimer = std::max(screenShakeTimer, 0.22f);
+
+    spawnFloatingText(player.x - 70.0f, player.y + 30.0f, "SUPER POWER: REFRACT", 0.2f, 0.9f, 1.0f, 1.1f);
+
+    for (auto& eb : enemyBullets) {
+        if (!eb.alive) continue;
+        eb.vy = -std::abs(eb.vy);
+        eb.y += 8.0f;
+    }
+
+    for (auto& e : enemies) {
+        if (!e.alive) continue;
+        float dx = e.x - player.x;
+        float dy = e.y - player.y;
+        float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist <= 170.0f) {
+            int damage = (e.enemyType == 3 || e.enemyType == 7) ? 4 : 2;
+            e.hp -= damage;
+            spawnExplosion(e.x, e.y, 0.3f, 0.9f, 1.0f);
+            if (e.hp <= 0) {
+                e.alive = false;
+                int pts = (e.enemyType == 3 || e.enemyType == 7) ? 100 : 10;
+                score += pts;
+                spawnExplosion(e.x, e.y, 1.0f, 0.4f, 0.1f);
+                spawnFloatingText(e.x, e.y, "+" + std::to_string(pts), 1.0f, 1.0f, 1.0f, 1.0f);
+
+                if (e.enemyType == 3 || e.enemyType == 7) {
+                    for (int i = 0; i < 8; ++i) {
+                        Scrap s = { e.x + (rand() % 60 - 30), e.y + (rand() % 60 - 30), 1.2f, 0.0f, true };
+                        scraps.push_back(s);
+                    }
+                } else if (rand() % 100 < 55) {
+                    Scrap s = { e.x, e.y, 1.5f, 0.0f, true };
+                    scraps.push_back(s);
+                }
+            }
+        }
+    }
+}
+
 void Game::update() {
     if (screenShakeTimer > 0) screenShakeTimer -= 0.016f;
     if (baseFlashTimer > 0) baseFlashTimer -= 0.016f;
+    
+    float prevCooldown = superPowerCooldownTimer;
+    if (superPowerCooldownTimer > 0.0f) superPowerCooldownTimer -= 1.0f;
+    if (superPowerCooldownTimer < 0.0f) superPowerCooldownTimer = 0.0f;
+    
+    // Notify when super power becomes ready
+    if (state == PLAYING && prevCooldown > 0.0f && superPowerCooldownTimer == 0.0f && !superPowerReadyNotified) {
+        superPowerReadyNotified = true;
+        spawnFloatingText(player.x - 80.0f, player.y + 40.0f, "SUPER POWER READY!", 0.2f, 0.9f, 1.0f, 1.5f);
+        
+        // Spawn cyan particle burst around player
+        for (int i = 0; i < 12; ++i) {
+            Particle p;
+            p.x = player.x;
+            p.y = player.y;
+            float angle = i * 2.0f * 3.14159f / 12.0f;
+            float spd = 2.0f + (rand() % 100) / 100.0f;
+            p.vx = cos(angle) * spd;
+            p.vy = sin(angle) * spd;
+            p.r = 0.2f; p.g = 0.9f; p.b = 1.0f;
+            p.lifetime = 0.6f + (rand() % 30) / 100.0f;
+            particles.push_back(p);
+        }
+    }
+    
+    if (superPowerPulseTimer > 0.0f) superPowerPulseTimer -= 0.016f;
+    if (superPowerPulseTimer < 0.0f) superPowerPulseTimer = 0.0f;
 
     if (state == PLAYING) {
         player.update(keyLeft, keyRight, keyUp, keyDown);
@@ -407,6 +491,37 @@ void Game::checkCollisions() {
         }
     }
 
+    for (auto& eb : enemyBullets) {
+        if (!eb.alive || eb.vy >= 0.0f) continue;
+        for (auto& e : enemies) {
+            if (!e.alive) continue;
+            if (aabb(eb.x, eb.y, 5, 12, e.x, e.y, e.w, e.h)) {
+                eb.alive = false;
+                e.hp--;
+                spawnExplosion(eb.x, eb.y, 0.2f, 0.9f, 1.0f);
+
+                if (e.hp <= 0) {
+                    e.alive = false;
+                    int pts = (e.enemyType == 3 || e.enemyType == 7) ? 100 : 10;
+                    score += pts;
+                    spawnExplosion(e.x, e.y, 1.0f, 0.4f, 0.1f);
+                    spawnFloatingText(e.x, e.y, "+" + std::to_string(pts), 1.0f, 1.0f, 1.0f, 1.0f);
+
+                    if (e.enemyType == 3 || e.enemyType == 7) {
+                        for (int i = 0; i < 8; ++i) {
+                            Scrap s = { e.x + (rand() % 60 - 30), e.y + (rand() % 60 - 30), 1.2f, 0.0f, true };
+                            scraps.push_back(s);
+                        }
+                    } else if (rand() % 100 < 55) {
+                        Scrap s = { e.x, e.y, 1.5f, 0.0f, true };
+                        scraps.push_back(s);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
     for (auto& e : enemies) {
         if (!e.alive) continue;
         if (aabb(player.x, player.y, player.w, player.h, e.x, e.y, e.w, e.h)) {
@@ -527,6 +642,26 @@ void Game::draw() {
         for (const auto& s : scraps) s.draw();
         for (const auto& e : enemies) e.draw();
         player.draw();
+        if (superPowerPulseTimer > 0.0f) {
+            float progress = 1.0f - (superPowerPulseTimer / SUPER_POWER_PULSE_MAX);
+            float radius = 28.0f + progress * 180.0f;
+            float beamRadius = radius - 16.0f;
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+            glColor4f(0.2f, 0.9f, 1.0f, 0.75f * (1.0f - progress));
+            glPointSize(2.0f);
+            drawMidpointCircle(superPowerCenterX, superPowerCenterY, radius);
+
+            glColor4f(0.8f, 1.0f, 1.0f, 0.55f * (1.0f - progress));
+            for (int i = 0; i < 8; ++i) {
+                float theta = i * 2.0f * 3.14159f / 8.0f;
+                float ex = superPowerCenterX + cos(theta) * beamRadius;
+                float ey = superPowerCenterY + sin(theta) * beamRadius;
+                drawBresenhamLine(superPowerCenterX, superPowerCenterY, ex, ey);
+            }
+            glDisable(GL_BLEND);
+        }
         drawHUD();
     }
 
@@ -646,6 +781,7 @@ void Game::drawGuidelines() {
     drawText(80, WIN_H - 300, "- Do not let enemies bypass the bottom boundary. It drains base shields!", GLUT_BITMAP_HELVETICA_18);
     drawText(80, WIN_H - 340, "- Destroy enemies to collect golden Scrap Credits. Use them to upgrade in the shop.", GLUT_BITMAP_HELVETICA_18);
     drawText(80, WIN_H - 380, "- Defeat the Heavy Carrier Boss on Wave 5 to survive.", GLUT_BITMAP_HELVETICA_18);
+    drawText(80, WIN_H - 420, "- Press F to trigger a Refract Wave that reflects bullets and damages nearby enemies.", GLUT_BITMAP_HELVETICA_18);
 
     float bx = WIN_W / 2.0f;
     float by = 100.0f;
@@ -1020,6 +1156,11 @@ void Game::handleInput(unsigned char key, bool pressed) {
                 exit(0);
             }
             return;
+        }
+        else if (state == PLAYING) {
+            if (key == 'f' || key == 'F') {
+                activateSuperPower();
+            }
         }
         else if (state == GUIDELINES) {
             if (key == 'b' || key == 'B') {
