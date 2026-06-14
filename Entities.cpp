@@ -226,7 +226,7 @@ void Bullet::update() {
 }
 
 void Bullet::draw() const {
-    glColor3f(0.2f, 1.0f, 1.0f);
+    glColor3f(1.0f, 0.2f, 1.0f);
     glPointSize(2.0f);
     drawBresenhamLine(x, y - 6.0f, x, y + 6.0f);
     glPointSize(1.0f);
