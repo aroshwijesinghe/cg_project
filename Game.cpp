@@ -695,14 +695,14 @@ void Game::drawMainMenu() {
     // 1. Draw Title Accents (Modern Sci-Fi Lines)
     glLineWidth(2.0f);
     glBegin(GL_LINES);
-        glColor3f(0.2f, 0.9f, 1.0f); // Cyan
+        glColor3f(0.3f, 0.95f, 1.0f); // Bright Cyan
         glVertex2f(WIN_W / 2 - 200, WIN_H / 2 + 160);
         glVertex2f(WIN_W / 2 - 180, WIN_H / 2 + 160);
 
         glVertex2f(WIN_W / 2 + 180, WIN_H / 2 + 160);
         glVertex2f(WIN_W / 2 + 200, WIN_H / 2 + 160);
         
-        glColor3f(1.0f, 0.8f, 0.2f); // Orange
+        glColor3f(1.0f, 0.85f, 0.15f); // Vibrant Orange
         glVertex2f(WIN_W / 2 - 110, WIN_H / 2 + 110);
         glVertex2f(WIN_W / 2 - 100, WIN_H / 2 + 110);
 
@@ -711,10 +711,10 @@ void Game::drawMainMenu() {
     glEnd();
 
     // 2. Title Text
-    glColor3f(0.2f, 0.9f, 1.0f);
+    glColor3f(0.3f, 0.95f, 1.0f); // Bright Cyan
     // Changed from Times Roman to Helvetica for a modern sci-fi look
     drawText(WIN_W / 2 - 90, WIN_H / 2 + 150, "SPACE ODYSSEY", GLUT_BITMAP_HELVETICA_18);
-    glColor3f(1.0f, 0.8f, 0.2f);
+    glColor3f(1.0f, 0.85f, 0.15f); // Vibrant Orange
     drawText(WIN_W / 2 - 95, WIN_H / 2 + 100, "ROGUE STARSHIP", GLUT_BITMAP_HELVETICA_18);
 
     std::string btns[3] = { "[1] START GAME", "[2] HOW TO PLAY", "[3] EXIT" };
@@ -743,7 +743,7 @@ void Game::drawMainMenu() {
         glEnd();
         
         // 4. Cyberpunk outline (2D Drawing)
-        glColor3f(0.2f, 0.9f, 1.0f);
+        glColor3f(0.3f, 0.95f, 1.0f); // Bright Cyan
         glLineWidth(2.0f);
         glBegin(GL_LINE_LOOP);
             glVertex2f(bx - bw/2 + corner, by + bh/2);
@@ -758,7 +758,7 @@ void Game::drawMainMenu() {
 
         // 5. Decorative filled triangle on the left side (2D Filling)
         glBegin(GL_TRIANGLES);
-            glColor3f(1.0f, 0.8f, 0.2f); // Orange
+            glColor3f(1.0f, 0.85f, 0.15f); // Vibrant Orange
             glVertex2f(bx - bw/2 + 15.0f, by);
             glVertex2f(bx - bw/2 + 23.0f, by + 5.0f);
             glVertex2f(bx - bw/2 + 23.0f, by - 5.0f);
