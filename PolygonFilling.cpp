@@ -377,70 +377,70 @@ void Game::drawHUD() {
   glColor4f(0.02f, 0.02f, 0.1f, 0.5f);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  drawRect(WIN_W / 2, WIN_H - 25, WIN_W, 50);
+  drawRect(WIN_W / 2, WIN_H - 18, WIN_W, 36);
   glDisable(GL_BLEND);
 
   // Score, wave, and level text
   glColor3f(1.0f, 1.0f, 1.0f);
   std::stringstream sw;
-  sw << "Score: " << score << "   Wave: " << wave << "   Lvl: " << level;
-  drawText(15, WIN_H - 32, sw.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+  sw << "Score: " << score << "  Wave: " << wave << "  Lvl: " << level;
+  drawText(10, WIN_H - 22, sw.str(), GLUT_BITMAP_HELVETICA_12);
 
   // Scrap credits
   std::stringstream sc;
   sc << "Scrap: " << credits;
   glColor3f(1.0f, 0.85f, 0.0f);
-  drawText(220, WIN_H - 32, sc.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(200, WIN_H - 22, sc.str(), GLUT_BITMAP_HELVETICA_12);
 
   // --- Hull health bar (discrete segments using filled rectangles) ---
   glColor3f(1.0f, 1.0f, 1.0f);
-  drawText(360, WIN_H - 32, "HULL: ", GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(280, WIN_H - 22, "HULL:", GLUT_BITMAP_HELVETICA_12);
   glColor3f(0.3f, 0.0f, 0.0f); // Dark red background
-  drawRect(440, WIN_H - 25, player.maxHull * 15, 12);
+  drawRect(348, WIN_H - 18, player.maxHull * 12, 10);
   glColor3f(0.2f, 0.9f, 0.2f); // Green fill segments
   for (int i = 0; i < player.hull; ++i) {
-    drawRect(440 - (player.maxHull * 15) / 2.0f + 7.5f + i * 15.0f, WIN_H - 25,
-             12, 10);
+    drawRect(348 - (player.maxHull * 12) / 2.0f + 6.0f + i * 12.0f, WIN_H - 18,
+             10, 8);
   }
 
   // --- Shield health bar (discrete segments using filled rectangles) ---
   glColor3f(1.0f, 1.0f, 1.0f);
-  drawText(495, WIN_H - 32, "SHIELD: ", GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(420, WIN_H - 22, "SHIELD:", GLUT_BITMAP_HELVETICA_12);
   glColor3f(0.0f, 0.1f, 0.3f); // Dark blue background
-  drawRect(585, WIN_H - 25, player.maxShields * 15, 12);
+  drawRect(502, WIN_H - 18, player.maxShields * 12, 10);
   glColor3f(0.0f, 0.8f, 1.0f); // Cyan fill segments
   for (int i = 0; i < player.shields; ++i) {
-    drawRect(585 - (player.maxShields * 15) / 2.0f + 7.5f + i * 15.0f,
-             WIN_H - 25, 12, 10);
+    drawRect(502 - (player.maxShields * 12) / 2.0f + 6.0f + i * 12.0f,
+             WIN_H - 18, 10, 8);
   }
 
   // --- Base shield bar (continuous fill scaled by percentage) ---
   glColor3f(1.0f, 1.0f, 1.0f);
-  drawText(635, WIN_H - 32, "BASE: ", GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(575, WIN_H - 22, "BASE:", GLUT_BITMAP_HELVETICA_12);
   glColor3f(0.2f, 0.2f, 0.2f); // Gray background
-  drawRect(720, WIN_H - 25, 100, 12);
+  drawRect(670, WIN_H - 18, 100, 10);
   glColor3f(0.8f, 0.0f, 1.0f); // Purple fill
   float pct = (float)baseShields / maxBaseShields;
-  drawRect(720 - 50.0f + pct * 50.0f, WIN_H - 25, 100 * pct, 10);
+  drawRect(670 - 50.0f + pct * 50.0f, WIN_H - 18, 100 * pct, 8);
 
   // Pause overlay
   if (state == PAUSED) {
     glColor3f(1.0f, 1.0f, 0.0f);
-    drawText(WIN_W / 2 - 40, WIN_H / 2, "PAUSED", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 20, WIN_H / 2, "PAUSED", GLUT_BITMAP_HELVETICA_12);
   }
 
   // Game Over overlay
   if (state == GAME_OVER) {
     glColor3f(1.0f, 0.2f, 0.2f);
-    drawText(WIN_W / 2 - 70, WIN_H / 2 + 20, "GAME OVER",
-             GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 30, WIN_H / 2 + 20, "GAME OVER",
+             GLUT_BITMAP_HELVETICA_12);
     glColor3f(1.0f, 1.0f, 1.0f);
     if (level == 2) {
-      drawText(WIN_W / 2 - 105, WIN_H / 2 - 10, "Press R to retry Level 2",
-               GLUT_BITMAP_TIMES_ROMAN_24);
+      drawText(WIN_W / 2 - 55, WIN_H / 2 - 10, "Press R to retry Level 2",
+               GLUT_BITMAP_HELVETICA_12);
     } else {
-      drawText(WIN_W / 2 - 90, WIN_H / 2 - 10, "Press R to restart",
-               GLUT_BITMAP_TIMES_ROMAN_24);
+      drawText(WIN_W / 2 - 45, WIN_H / 2 - 10, "Press R to restart",
+               GLUT_BITMAP_HELVETICA_12);
     }
   }
 }
@@ -481,11 +481,11 @@ void Game::drawMainMenu() {
 
   // 2. Title Text
   glColor3f(0.2f, 0.9f, 1.0f);
-  drawText(WIN_W / 2 - 90, WIN_H / 2 + 150, "SPACE ODYSSEY",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 45, WIN_H / 2 + 150, "SPACE ODYSSEY",
+           GLUT_BITMAP_HELVETICA_12);
   glColor3f(1.0f, 0.8f, 0.2f);
-  drawText(WIN_W / 2 - 95, WIN_H / 2 + 100, "ROGUE STARSHIP",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 48, WIN_H / 2 + 120, "ROGUE STARSHIP",
+           GLUT_BITMAP_HELVETICA_12);
 
   std::string btns[3] = {"[1] START GAME", "[2] HOW TO PLAY", "[3] EXIT"};
   float ys[3] = {WIN_H / 2.0f + 30.0f, WIN_H / 2.0f - 30.0f,
@@ -537,8 +537,8 @@ void Game::drawMainMenu() {
 
     // 6. Button Text
     glColor3f(1.0f, 1.0f, 1.0f);
-    drawText(bx - btns[i].length() * 4.5f + 15.0f, by - 5.0f, btns[i],
-             GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(bx - btns[i].length() * 3.5f + 15.0f, by - 5.0f, btns[i],
+             GLUT_BITMAP_HELVETICA_12);
   }
 }
 
@@ -552,32 +552,32 @@ void Game::drawMainMenu() {
  *=============================================================================*/
 void Game::drawGuidelines() {
   glColor3f(0.2f, 0.9f, 1.0f);
-  drawText(WIN_W / 2 - 120, WIN_H - 100, "HOW TO PLAY / INSTRUCTIONS",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 75, WIN_H - 100, "HOW TO PLAY / INSTRUCTIONS",
+           GLUT_BITMAP_HELVETICA_12);
 
   glColor3f(1.0f, 1.0f, 1.0f);
-  drawText(80, WIN_H - 180,
+  drawText(80, WIN_H - 160,
            "- Control your ship using Arrow Keys or WASD keys.",
-           GLUT_BITMAP_TIMES_ROMAN_24);
-  drawText(80, WIN_H - 220, "- Press Spacebar to fire your lasers.",
-           GLUT_BITMAP_TIMES_ROMAN_24);
-  drawText(80, WIN_H - 260, "- Dodge incoming orange enemy plasma bolts.",
-           GLUT_BITMAP_TIMES_ROMAN_24);
-  drawText(80, WIN_H - 300,
+           GLUT_BITMAP_HELVETICA_12);
+  drawText(80, WIN_H - 190, "- Press Spacebar to fire your lasers.",
+           GLUT_BITMAP_HELVETICA_12);
+  drawText(80, WIN_H - 220, "- Dodge incoming orange enemy plasma bolts.",
+           GLUT_BITMAP_HELVETICA_12);
+  drawText(80, WIN_H - 250,
            "- Do not let enemies bypass the bottom boundary. It drains base "
            "shields!",
-           GLUT_BITMAP_TIMES_ROMAN_24);
-  drawText(80, WIN_H - 340,
+           GLUT_BITMAP_HELVETICA_12);
+  drawText(80, WIN_H - 280,
            "- Destroy enemies to collect golden Scrap Credits. Use them to "
            "upgrade in the shop.",
-           GLUT_BITMAP_TIMES_ROMAN_24);
-  drawText(80, WIN_H - 380,
+           GLUT_BITMAP_HELVETICA_12);
+  drawText(80, WIN_H - 310,
            "- Defeat the Heavy Carrier Boss on Wave 5 to survive.",
-           GLUT_BITMAP_TIMES_ROMAN_24);
-  drawText(80, WIN_H - 420,
+           GLUT_BITMAP_HELVETICA_12);
+  drawText(80, WIN_H - 340,
            "- Press F to trigger a Refract Wave that reflects bullets and "
            "damages nearby enemies.",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+           GLUT_BITMAP_HELVETICA_12);
 
   float bx = WIN_W / 2.0f;
   float by = 100.0f;
@@ -598,7 +598,7 @@ void Game::drawGuidelines() {
   glEnd();
 
   glColor3f(1.0f, 1.0f, 1.0f);
-  drawText(bx - 65, by - 6, "[B] BACK TO MENU", GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(bx - 45, by - 6, "[B] BACK TO MENU", GLUT_BITMAP_HELVETICA_12);
 }
 
 /*=============================================================================
@@ -610,12 +610,12 @@ void Game::drawGuidelines() {
 void Game::drawVictoryScreen() {
   // Title
   glColor3f(1.0f, 0.85f, 0.0f);
-  drawText(WIN_W / 2 - 120, WIN_H / 2 + 140, "CONGRATULATIONS!",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 55, WIN_H / 2 + 140, "CONGRATULATIONS!",
+           GLUT_BITMAP_HELVETICA_12);
 
   glColor3f(0.2f, 0.9f, 1.0f);
-  drawText(WIN_W / 2 - 70, WIN_H / 2 + 100, "YOU HAVE WON!",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 40, WIN_H / 2 + 100, "YOU HAVE WON!",
+           GLUT_BITMAP_HELVETICA_12);
 
   // Decorative lines
   glLineWidth(2.0f);
@@ -629,18 +629,18 @@ void Game::drawVictoryScreen() {
   glColor3f(1.0f, 1.0f, 1.0f);
   std::stringstream scr;
   scr << "FINAL SCORE: " << score;
-  drawText(WIN_W / 2 - 60, WIN_H / 2 + 40, scr.str(),
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 40, WIN_H / 2 + 45, scr.str(),
+           GLUT_BITMAP_HELVETICA_12);
 
   std::stringstream wv;
   wv << "WAVES SURVIVED: " << wave;
-  drawText(WIN_W / 2 - 70, WIN_H / 2 + 10, wv.str(),
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 45, WIN_H / 2 + 15, wv.str(),
+           GLUT_BITMAP_HELVETICA_12);
 
   std::stringstream cr;
   cr << "SCRAP COLLECTED: " << credits;
-  drawText(WIN_W / 2 - 70, WIN_H / 2 - 15, cr.str(),
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 50, WIN_H / 2 - 15, cr.str(),
+           GLUT_BITMAP_HELVETICA_12);
 
   // Decorative lines
   glLineWidth(2.0f);
@@ -652,8 +652,8 @@ void Game::drawVictoryScreen() {
 
   // Prompt to go back
   glColor3f(0.6f, 0.6f, 0.6f);
-  drawText(WIN_W / 2 - 100, WIN_H / 2 - 80, "Press R to return to Main Menu",
-           GLUT_BITMAP_TIMES_ROMAN_24);
+  drawText(WIN_W / 2 - 80, WIN_H / 2 - 80, "Press R to return to Main Menu",
+           GLUT_BITMAP_HELVETICA_12);
 }
 
 /*=============================================================================

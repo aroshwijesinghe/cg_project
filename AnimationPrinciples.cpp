@@ -333,7 +333,7 @@ void Game::spawnEnemy() {
  *=============================================================================*/
 void Game::drawShipSelect() {
     glColor3f(0.2f, 0.9f, 1.0f);
-    drawText(WIN_W / 2 - 130, WIN_H - 100, "CHOOSE YOUR STARSHIP", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 60, WIN_H - 100, "CHOOSE YOUR STARSHIP", GLUT_BITMAP_HELVETICA_12);
 
     std::string btns[3] = { "[1] INTERCEPTOR", "[2] AEGIS TANK", "[3] VANGUARD" };
 
@@ -357,34 +357,34 @@ void Game::drawShipSelect() {
         // Ship preview and stats
         glColor3f(1.0f, 1.0f, 1.0f);
         if (i == 0) {
-            drawText(cx - 50, cy + 80, "INTERCEPTOR", GLUT_BITMAP_TIMES_ROMAN_24);
+            drawText(cx - 35, cy + 80, "INTERCEPTOR", GLUT_BITMAP_HELVETICA_12);
             glColor3f(0.2f, 0.9f, 1.0f);
             drawTriangle(cx, cy + 10, 30, 25);
             glColor3f(1.0f, 1.0f, 1.0f);
-            drawText(cx - 70, cy - 20, "Speed: Fast (6.5)", GLUT_BITMAP_HELVETICA_12);
-            drawText(cx - 70, cy - 40, "Shields: Weak (2)", GLUT_BITMAP_HELVETICA_12);
-            drawText(cx - 70, cy - 60, "Weapons: Focused", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 20, "Speed: Fast (6.5)", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 38, "Shields: Weak (2)", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 56, "Weapons: Focused", GLUT_BITMAP_HELVETICA_12);
         }
         else if (i == 1) {
-            drawText(cx - 40, cy + 80, "AEGIS TANK", GLUT_BITMAP_TIMES_ROMAN_24);
+            drawText(cx - 30, cy + 80, "AEGIS TANK", GLUT_BITMAP_HELVETICA_12);
             glColor3f(0.1f, 0.6f, 0.9f);
             drawRect(cx, cy + 10, 26, 26);
             glColor3f(1.0f, 1.0f, 1.0f);
-            drawText(cx - 70, cy - 20, "Speed: Slow (4.5)", GLUT_BITMAP_HELVETICA_12);
-            drawText(cx - 70, cy - 40, "Shields: Heavy (4)", GLUT_BITMAP_HELVETICA_12);
-            drawText(cx - 70, cy - 60, "Weapons: Standard", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 20, "Speed: Slow (4.5)", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 38, "Shields: Heavy (4)", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 56, "Weapons: Standard", GLUT_BITMAP_HELVETICA_12);
         }
         else {
-            drawText(cx - 40, cy + 80, "VANGUARD", GLUT_BITMAP_TIMES_ROMAN_24);
+            drawText(cx - 25, cy + 80, "VANGUARD", GLUT_BITMAP_HELVETICA_12);
             glColor3f(0.9f, 0.2f, 0.2f);
             drawTriangle(cx, cy + 10, 30, 25);
             glColor3f(0.5f, 0.1f, 0.1f);
             drawTriangle(cx - 12, cy + 5, 10, 18);
             drawTriangle(cx + 12, cy + 5, 10, 18);
             glColor3f(1.0f, 1.0f, 1.0f);
-            drawText(cx - 70, cy - 20, "Speed: Med (5.8)", GLUT_BITMAP_HELVETICA_12);
-            drawText(cx - 70, cy - 40, "Shields: Light (1)", GLUT_BITMAP_HELVETICA_12);
-            drawText(cx - 70, cy - 60, "Weapons: Triple", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 20, "Speed: Med (5.8)", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 38, "Shields: Light (1)", GLUT_BITMAP_HELVETICA_12);
+            drawText(cx - 60, cy - 56, "Weapons: Triple", GLUT_BITMAP_HELVETICA_12);
         }
 
         // Selection button
@@ -405,11 +405,11 @@ void Game::drawShipSelect() {
         glEnd();
 
         glColor3f(1.0f, 1.0f, 1.0f);
-        drawText(bx - btns[i].length() * 4.0f, by - 6, btns[i], GLUT_BITMAP_TIMES_ROMAN_24);
+        drawText(bx - btns[i].length() * 3.5f, by - 6, btns[i], GLUT_BITMAP_HELVETICA_12);
     }
 
     glColor3f(0.5f, 0.5f, 0.5f);
-    drawText(WIN_W / 2 - 80, 50, "[B] BACK TO MAIN MENU", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 55, 50, "[B] BACK TO MAIN MENU", GLUT_BITMAP_HELVETICA_12);
 }
 
 /*=============================================================================
@@ -425,12 +425,12 @@ void Game::drawShipSelect() {
  *=============================================================================*/
 void Game::drawUpgradeShop() {
     glColor3f(1.0f, 0.85f, 0.0f);
-    drawText(WIN_W / 2 - 120, WIN_H - 80, "ROGUE UPGRADE STATION", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 65, WIN_H - 80, "ROGUE UPGRADE STATION", GLUT_BITMAP_HELVETICA_12);
 
     std::stringstream ss;
     ss << "AVAILABLE SCRAP: " << credits << " CREDITS";
     glColor3f(1.0f, 1.0f, 1.0f);
-    drawText(WIN_W / 2 - 110, WIN_H - 120, ss.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 65, WIN_H - 110, ss.str(), GLUT_BITMAP_HELVETICA_12);
 
     // Left panel: current stats
     glColor3f(0.1f, 0.15f, 0.2f);
@@ -444,19 +444,19 @@ void Game::drawUpgradeShop() {
     glEnd();
     
     glColor3f(1.0f, 1.0f, 1.0f);
-    drawText(60, WIN_H/2 + 80, "CURRENT SHIP STATS:", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(70, WIN_H/2 + 90, "CURRENT SHIP STATS:", GLUT_BITMAP_HELVETICA_12);
     std::stringstream sh;
     sh << "- Weapon Level: Lvl " << player.weaponLevel;
-    drawText(60, WIN_H/2 + 40, sh.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(60, WIN_H/2 + 55, sh.str(), GLUT_BITMAP_HELVETICA_12);
     std::stringstream hl;
     hl << "- Hull Points: " << player.hull << " / " << player.maxHull;
-    drawText(60, WIN_H/2, hl.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(60, WIN_H/2 + 25, hl.str(), GLUT_BITMAP_HELVETICA_12);
     std::stringstream sl;
     sl << "- Shield Level: Lvl " << player.maxShields;
-    drawText(60, WIN_H/2 - 40, sl.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(60, WIN_H/2 - 5, sl.str(), GLUT_BITMAP_HELVETICA_12);
     std::stringstream bs;
     bs << "- Base Shields: " << baseShields << "%";
-    drawText(60, WIN_H/2 - 80, bs.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(60, WIN_H/2 - 35, bs.str(), GLUT_BITMAP_HELVETICA_12);
 
     // Right panel: upgrade options
     bool canBuyWeapon = (credits >= 100 && player.weaponLevel < 3);
@@ -466,15 +466,15 @@ void Game::drawUpgradeShop() {
 
     std::string reasonTexts[4] = { "", "", "", "" };
     if (!canBuyWeapon) {
-        if (player.weaponLevel >= 3) reasonTexts[0] = "  [MAX LEVEL]";
-        else reasonTexts[0] = "  [NOT ENOUGH SCRAP]";
+        if (player.weaponLevel >= 3) reasonTexts[0] = "[MAX LEVEL]";
+        else reasonTexts[0] = "[NOT ENOUGH SCRAP]";
     }
     if (!canRepairHull) {
-        if (player.hull >= player.maxHull) reasonTexts[1] = "  [HULL FULL]";
-        else reasonTexts[1] = "  [NOT ENOUGH SCRAP]";
+        if (player.hull >= player.maxHull) reasonTexts[1] = "[HULL FULL]";
+        else reasonTexts[1] = "[NOT ENOUGH SCRAP]";
     }
     if (!canBuyShield) {
-        reasonTexts[2] = "  [NOT ENOUGH SCRAP]";
+        reasonTexts[2] = "[NOT ENOUGH SCRAP]";
     }
 
     std::string shopTexts[4] = {
@@ -524,11 +524,13 @@ void Game::drawUpgradeShop() {
         } else {
             glColor3f(0.4f, 0.4f, 0.4f);
         }
-        drawText(bx - shopTexts[i].length() * 4.0f, by - 6, shopTexts[i], GLUT_BITMAP_TIMES_ROMAN_24);
+        // Center text in button: Helvetica 12 chars are ~7px wide
+        drawText(bx - shopTexts[i].length() * 3.5f, by + 2, shopTexts[i], GLUT_BITMAP_HELVETICA_12);
 
+        // Show reason text BELOW the main button text
         if (!available[i] && reasonTexts[i].length() > 0) {
             glColor3f(1.0f, 0.3f, 0.3f);
-            drawText(bx - shopTexts[i].length() * 4.0f + shopTexts[i].length() * 8.0f, by - 6, reasonTexts[i], GLUT_BITMAP_TIMES_ROMAN_24);
+            drawText(bx - reasonTexts[i].length() * 3.5f, by - 12, reasonTexts[i], GLUT_BITMAP_HELVETICA_12);
         }
     }
 }
@@ -548,43 +550,43 @@ void Game::drawUpgradeShop() {
 void Game::drawLevelTransition() {
     // Big title
     glColor3f(0.6f, 0.1f, 0.8f);
-    drawText(WIN_W / 2 - 50, WIN_H / 2 + 160, "LEVEL 2", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 22, WIN_H / 2 + 160, "LEVEL 2", GLUT_BITMAP_HELVETICA_12);
 
     glColor3f(0.8f, 0.3f, 1.0f);
-    drawText(WIN_W / 2 - 75, WIN_H / 2 + 120, "NEBULA ZONE", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 35, WIN_H / 2 + 130, "NEBULA ZONE", GLUT_BITMAP_HELVETICA_12);
 
     // Decorative line
     glLineWidth(2.0f);
     glColor3f(0.6f, 0.1f, 0.8f);
     glBegin(GL_LINES);
-        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 + 100);
-        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 + 100);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 + 110);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 + 110);
     glEnd();
 
     // Info
     glColor3f(1.0f, 1.0f, 1.0f);
-    drawText(WIN_W / 2 - 130, WIN_H / 2 + 60, "New enemies. New environment.", GLUT_BITMAP_TIMES_ROMAN_24);
-    drawText(WIN_W / 2 - 115, WIN_H / 2 + 35, "Your upgrades carry over.", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 75, WIN_H / 2 + 70, "New enemies. New environment.", GLUT_BITMAP_HELVETICA_12);
+    drawText(WIN_W / 2 - 60, WIN_H / 2 + 40, "Your upgrades carry over.", GLUT_BITMAP_HELVETICA_12);
 
     // Stats carry-over summary
     glColor3f(0.2f, 0.9f, 1.0f);
     std::stringstream hp;
     hp << "Hull: " << player.hull << "/" << player.maxHull << "  Shields: " << player.shields << "/" << player.maxShields;
-    drawText(WIN_W / 2 - 100, WIN_H / 2 - 10, hp.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 85, WIN_H / 2, hp.str(), GLUT_BITMAP_HELVETICA_12);
 
     std::stringstream wp;
     wp << "Weapon Level: " << player.weaponLevel << "  Scrap: " << credits;
-    drawText(WIN_W / 2 - 90, WIN_H / 2 - 35, wp.str(), GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 70, WIN_H / 2 - 25, wp.str(), GLUT_BITMAP_HELVETICA_12);
 
     // Decorative line
     glLineWidth(2.0f);
     glColor3f(0.6f, 0.1f, 0.8f);
     glBegin(GL_LINES);
-        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 - 60);
-        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 - 60);
+        glVertex2f(WIN_W / 2 - 150, WIN_H / 2 - 50);
+        glVertex2f(WIN_W / 2 + 150, WIN_H / 2 - 50);
     glEnd();
 
     // Prompt
     glColor3f(1.0f, 0.85f, 0.0f);
-    drawText(WIN_W / 2 - 115, WIN_H / 2 - 100, "Press ENTER to begin Level 2", GLUT_BITMAP_TIMES_ROMAN_24);
+    drawText(WIN_W / 2 - 65, WIN_H / 2 - 90, "Press ENTER to begin Level 2", GLUT_BITMAP_HELVETICA_12);
 }

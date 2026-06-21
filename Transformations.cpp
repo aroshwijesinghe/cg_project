@@ -125,12 +125,18 @@ void Enemy::update(float playerX) {
         } else {
             x += sin(y * 0.05f) * 1.8f;
         }
+        // Clamp within screen bounds
+        if (x < w/2 + 5) x = w/2 + 5;
+        if (x > WIN_W - w/2 - 5) x = WIN_W - w/2 - 5;
     }
     else if (enemyType == 2) {
         // Seeker: descend while tracking player position
         y -= speed;
         if (x < playerX) x += 1.0f;
         if (x > playerX) x -= 1.0f;
+        // Clamp within screen bounds
+        if (x < w/2 + 5) x = w/2 + 5;
+        if (x > WIN_W - w/2 - 5) x = WIN_W - w/2 - 5;
     }
     else if (enemyType == 3) {
         // L1 Boss: descend slowly, then time-based oscillation
@@ -151,6 +157,9 @@ void Enemy::update(float playerX) {
         y -= speed;
         moveTimer += 0.05f;
         x += sin(moveTimer) * 3.5f;
+        // Clamp within screen bounds
+        if (x < w/2 + 5) x = w/2 + 5;
+        if (x > WIN_W - w/2 - 5) x = WIN_W - w/2 - 5;
     }
     // Type 5: Sentinel — Descends then orbits using cos/sin circular motion
     else if (enemyType == 5) {
@@ -161,6 +170,9 @@ void Enemy::update(float playerX) {
             x += cos(moveTimer) * 2.0f;
             y += sin(moveTimer) * 1.0f;
         }
+        // Clamp within screen bounds
+        if (x < w/2 + 5) x = w/2 + 5;
+        if (x > WIN_W - w/2 - 5) x = WIN_W - w/2 - 5;
     }
     // Type 6: Wraith — Fast tracker that fades in/out
     else if (enemyType == 6) {
@@ -168,6 +180,9 @@ void Enemy::update(float playerX) {
         if (x < playerX) x += 1.8f;
         if (x > playerX) x -= 1.8f;
         moveTimer += 0.03f; // Used for alpha fade in draw()
+        // Clamp within screen bounds
+        if (x < w/2 + 5) x = w/2 + 5;
+        if (x > WIN_W - w/2 - 5) x = WIN_W - w/2 - 5;
     }
     // Type 7: Nebula Overlord Boss — 3-phase movement
     else if (enemyType == 7) {
