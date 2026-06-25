@@ -91,7 +91,8 @@ void Particle::draw() const {
  * Type 1 (Shooter): Descends to a Y threshold, then oscillates
  *   horizontally using sinusoidal translation: x += sin(y * 0.05) * 1.8
  *
- * Type 2 (Seeker): Descends while tracking player X position.
+ * Type 2 (Seeker): Descends while tracking  
+ *  X position.
  *   Applies conditional horizontal translation toward the player.
  *
  * Type 3 (L1 Boss): Descends at half speed, then oscillates using
@@ -226,22 +227,20 @@ void Enemy::update(float playerX) {
  * The composite matrix M = T(x,y) * R(angle) first rotates the
  * diamond shape, then translates it to the scrap's world position.
  *
- * The golden glow circle behind the scrap uses GL_TRIANGLE_FAN with
- * additive blending for a halo effect (see RotationVectors for the
- * trigonometric vertex generation used in circle rendering).
+ * The golden glow behind the scrap uses the Midpoint Circle algorithm
+ * (drawMidpointCircle) with additive blending for a crisp halo effect.
+ * This gives a practical in-game use of integer raster circle plotting.
  *=============================================================================*/
 void Scrap::draw() const {
-    // Golden glow circle behind the scrap (additive blending)
+    // Golden glow rings behind the scrap using Midpoint Circle
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-    glColor4f(1.0f, 0.7f, 0.0f, 0.15f);
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(x, y);
-    for (int i = 0; i <= 16; ++i) {
-        float theta = i * 2.0f * 3.14159f / 16.0f;
-        glVertex2f(x + cos(theta) * 12.0f, y + sin(theta) * 12.0f);
-    }
-    glEnd();
+    glPointSize(2.0f);
+    glColor4f(1.0f, 0.7f, 0.0f, 0.18f);
+    drawMidpointCircle(x, y, 12.0f);
+    glColor4f(1.0f, 0.9f, 0.4f, 0.10f);
+    drawMidpointCircle(x, y, 9.0f);
+    glPointSize(1.0f);
     glDisable(GL_BLEND);
 
     // --- Composite transformation: Translate + Rotate ---
